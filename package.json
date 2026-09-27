@@ -1,0 +1,22 @@
+{
+  "name": "math-thinking-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "start:render": "node scripts/start-render.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  },
+  "dependencies": {
+    "katex": "^0.18.9",
+    "three": "^0.186.1"
+  }
+}

@@ -1,0 +1,312 @@
+{
+  "users": [
+    {
+      "id": "7e49c93d-b339-4dd2-99fa-67d6b51dffe1",
+      "username": "hocsinh",
+      "name": "Nguyễn Minh",
+      "role": "student",
+      "studentIds": []
+    },
+    {
+      "id": "3ba5e052-291e-429d-ac4d-903d9def2d05",
+      "username": "giaovien",
+      "name": "Giáo viên Toán",
+      "role": "teacher",
+      "studentIds": [
+        "7e49c93d-b339-4dd2-99fa-67d6b51dffe1"
+      ]
+    },
+    {
+      "id": "cd45dc4a-dbeb-458b-b7b7-db4ee171156e",
+      "username": "phuhuynh",
+      "name": "Phụ huynh Nguyễn Minh",
+      "role": "parent",
+      "studentIds": [
+        "7e49c93d-b339-4dd2-99fa-67d6b51dffe1"
+      ]
+    },
+    {
+      "id": "f83d73cf-b176-45bc-a8f8-82d4879e3853",
+      "username": "quantri",
+      "name": "Quản trị hệ thống",
+      "role": "admin",
+      "studentIds": []
+    }
+  ],
+  "states": {
+    "7e49c93d-b339-4dd2-99fa-67d6b51dffe1": {
+      "attempts": [
+        {
+          "id": "5e4e9e3d-77b2-492b-9859-6f35a8c5696a",
+          "exerciseId": "roots9-1",
+          "skill": "roots9",
+          "time": 1790503614366,
+          "mode": "practice",
+          "answer": "-5",
+          "initialCorrect": false,
+          "corrected": true,
+          "completed": 1790503614568,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Dùng \\(\\sqrt{a^2}=|a|\\); căn bậc hai số học luôn không âm. Vì vậy kết quả đúng là 5; lời giải mẫu cho -5 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "89f95b09-0da9-4c81-bea1-521de682e99e",
+          "exerciseId": "roots9-2",
+          "skill": "roots9",
+          "time": 1790503614629,
+          "mode": "practice",
+          "answer": "14",
+          "initialCorrect": true,
+          "corrected": true,
+          "completed": 1790503614779,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Tính từng căn rồi cộng: 6 + 8 = 14. Không gộp thành căn của tổng. Vì vậy kết quả đúng là 14; lời giải mẫu cho 10 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "9a8dcc92-0324-4573-80d4-7a3df6ce9e90",
+          "exerciseId": "systems9-1",
+          "skill": "systems9",
+          "time": 1790503614846,
+          "mode": "practice",
+          "answer": "3",
+          "initialCorrect": true,
+          "corrected": true,
+          "completed": 1790503614996,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Cộng hai phương trình được 2x = 6, rồi chia hai vế cho 2. Vì vậy kết quả đúng là 3; lời giải mẫu cho 6 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "22341873-a7d5-4552-8a0f-35eeb1bd2ccf",
+          "exerciseId": "systems9-2",
+          "skill": "systems9",
+          "time": 1790503615046,
+          "mode": "practice",
+          "answer": "5",
+          "initialCorrect": false,
+          "corrected": true,
+          "completed": 1790503615196,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Cộng hai phương trình được x = 5, sau đó y = 7 - 5 = 2. Vì vậy kết quả đúng là 2; lời giải mẫu cho 5 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "a82b4390-33eb-4853-b0a3-2a26fdfea577",
+          "exerciseId": "quadratic9-1",
+          "skill": "quadratic9",
+          "time": 1790503615246,
+          "mode": "practice",
+          "answer": "1",
+          "initialCorrect": true,
+          "corrected": true,
+          "completed": 1790503615396,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Ở đây a = 1, b = -5, c = 6; biệt thức bằng 25 - 24 = 1. Vì vậy kết quả đúng là 1; lời giải mẫu cho 49 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "fd57026a-c729-4d43-ba65-91daba5d36aa",
+          "exerciseId": "quadratic9-2",
+          "skill": "quadratic9",
+          "time": 1790503615446,
+          "mode": "practice",
+          "answer": "3",
+          "initialCorrect": true,
+          "corrected": true,
+          "completed": 1790503615596,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Phân tích thành \\((x-2)(x-3)=0\\); hai nghiệm là 2 và 3. Vì vậy kết quả đúng là 3; lời giải mẫu cho 5 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "fe0eccd4-5195-4606-b2eb-50c2331519df",
+          "exerciseId": "trig9-1",
+          "skill": "trig9",
+          "time": 1790503615663,
+          "mode": "practice",
+          "answer": "3/5",
+          "initialCorrect": false,
+          "corrected": true,
+          "completed": 1790503615813,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Cạnh đối góc B là AC, cạnh huyền là BC; sin B = AC/BC. Vì vậy kết quả đúng là 4/5; lời giải mẫu cho 3/5 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "ee7c9dce-072b-4be2-9d97-81ada0bbf471",
+          "exerciseId": "trig9-2",
+          "skill": "trig9",
+          "time": 1790503615863,
+          "mode": "practice",
+          "answer": "3/5",
+          "initialCorrect": true,
+          "corrected": true,
+          "completed": 1790503616013,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Cạnh kề góc B là AB, cạnh huyền là BC; cos B = AB/BC. Vì vậy kết quả đúng là 3/5; lời giải mẫu cho 4/5 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "f88f5c85-e9b4-4702-8169-06c9428c7a45",
+          "exerciseId": "circle9-1",
+          "skill": "circle9",
+          "time": 1790503616064,
+          "mode": "practice",
+          "answer": "6",
+          "initialCorrect": true,
+          "corrected": true,
+          "completed": 1790503616214,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Chu vi bằng \\(2\\pi r\\), không phải diện tích \\(\\pi r^2\\). Vì vậy kết quả đúng là 6; lời giải mẫu cho 9 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        },
+        {
+          "id": "2a3bac57-6deb-44fd-84b2-cc922046ea0f",
+          "exerciseId": "circle9-2",
+          "skill": "circle9",
+          "time": 1790503616264,
+          "mode": "practice",
+          "answer": "64",
+          "initialCorrect": false,
+          "corrected": true,
+          "completed": 1790503616414,
+          "explanation": "[DEMO tiến độ] Lượt làm thử của trợ lý theo yêu cầu chủ tài khoản. Bán kính bằng nửa đường kính, tức 4 cm; bình phương bán kính là 16. Vì vậy kết quả đúng là 16; lời giải mẫu cho 64 không phù hợp quy tắc trên. Đây là dữ liệu kiểm thử, không phải đánh giá năng lực học sinh."
+        }
+      ],
+      "reviews": {
+        "roots9-1": {
+          "due": 1790590014568,
+          "interval": 0
+        },
+        "roots9-2": {
+          "due": 1790590014779,
+          "interval": 0
+        },
+        "systems9-1": {
+          "due": 1790590014996,
+          "interval": 0
+        },
+        "systems9-2": {
+          "due": 1790590015196,
+          "interval": 0
+        },
+        "quadratic9-1": {
+          "due": 1790590015396,
+          "interval": 0
+        },
+        "quadratic9-2": {
+          "due": 1790590015596,
+          "interval": 0
+        },
+        "trig9-1": {
+          "due": 1790590015813,
+          "interval": 0
+        },
+        "trig9-2": {
+          "due": 1790590016013,
+          "interval": 0
+        },
+        "circle9-1": {
+          "due": 1790590016214,
+          "interval": 0
+        },
+        "circle9-2": {
+          "due": 1790590016414,
+          "interval": 0
+        }
+      },
+      "assignments": [],
+      "notes": {},
+      "profile": {
+        "name": "Nguyễn Minh",
+        "grade": "9"
+      }
+    }
+  },
+  "lessonPublications": [
+    {
+      "id": "demo-v1-6-1",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-6-2",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-6-3",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-6-4",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-6-5",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-7-1",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-7-2",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-7-3",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-7-4",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-7-5",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-8-1",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-8-2",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-8-3",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-8-4",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-8-5",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-9-1",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-9-2",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-9-3",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-9-4",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    },
+    {
+      "id": "demo-v1-9-5",
+      "publishedAt": 1790502773569,
+      "teacherId": "3ba5e052-291e-429d-ac4d-903d9def2d05"
+    }
+  ]
+}
