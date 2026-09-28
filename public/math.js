@@ -89,7 +89,7 @@ export function attachMathPreviews(root){
     const update=()=>{box.innerHTML=input.value.trim()?`<span>Xem trước:</span> ${formula(input.value)}`:'<span>Công thức sẽ hiện ở đây khi em nhập.</span>';};
     input.addEventListener('input',update);update();
   }
-  for(const field of root.querySelectorAll('#explanation, #counter-explain, .note-form textarea')){
+  for(const field of root.querySelectorAll('#working, #explanation, #counter-explain, .note-form textarea')){
     const details=document.createElement('details');details.className='math-writing-help';
     details.innerHTML='<summary>Viết và xem trước công thức</summary><p>Dùng \\( \\frac{1}{2} \\), \\( x^2 \\), \\( \\sqrt{9} \\) trong lời giải thích. Dùng \\[ ... \\] cho công thức riêng dòng.</p><div class="math-preview-text"></div>';
     field.insertAdjacentElement('afterend',details);

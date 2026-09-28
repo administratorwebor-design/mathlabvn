@@ -10,7 +10,7 @@ page.on('pageerror',e=>errors.push(e.message));
 try{
  await app.login(page,'teacher');await page.context().request.post(app.base+'/api/teacher/lessons/import-demo',{data:{}});await app.login(page);
  const ids=demoLessons.filter(l=>l.grade===9).flatMap(l=>l.exerciseIds.slice(0,2)),now=Date.now();
- const attempts=ids.map((id,i)=>{const e=exercises.find(e=>e.id===id);return{id:randomUUID(),exerciseId:id,skill:e.skill,time:now+i,completed:now+i,corrected:true,initialCorrect:i%3!==0,answer:e.answer,explanation:'Demo kiểm tra thống kê và liên kết.',mode:'practice'};});
+ const attempts=ids.map((id,i)=>{const e=exercises.find(e=>e.id===id);return{id:randomUUID(),exerciseId:id,skill:e.skill,time:now+i,completed:now+i,corrected:true,initialCorrect:i%3!==0,answer:i%3!==0?e.answer:'999',explanation:'Demo kiểm tra thống kê và liên kết.',mode:'practice'};});
  const data={attempts,reviews:Object.fromEntries(ids.map(id=>[id,{due:now+86400000,interval:0}])),profile:{name:'Nguyễn Minh',grade:'9'}};
  assert.equal((await page.context().request.put(app.base+'/api/student/state',{data})).status(),200);
  await page.goto(app.base);await page.locator('.reference-dashboard').waitFor();

@@ -1,3 +1,4 @@
+import {learningAI} from './learning-ai.mjs';
 import {generateContentDraft} from './teacher-content.mjs';
 import http from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
@@ -62,6 +63,25 @@ export const server = http.createServer(async (req, res) => {
     if(url.pathname.startsWith('/api/')&&url.pathname!=='/api/status'&&!user)return json(res,401,{error:'Vui lòng đăng nhập để tiếp tục.'});
     if(url.pathname==='/api/auth/session'&&req.method==='GET')return json(res,200,{user:{id:user.id,name:user.name,username:user.username,role:user.role}});
     if(url.pathname==='/api/workspace'&&req.method==='GET')return json(res,200,{...accounts.workspace(user,url.searchParams.get('studentId')),lessonPublications:accounts.lessonPublications(),uploadedLessons:accounts.uploadedLessons(user),teacherContents:accounts.teacherContents(user)});
+    if(url.pathname.startsWith('/api/learning/')){
+      const action=url.pathname.slice('/api/learning/'.length),input=req.method==='GET'?Object.fromEntries(url.searchParams):await body(req);
+      if(req.method==='GET'&&action==='report')return json(res,200,accounts.learning.report(user,input.studentId));
+      if(req.method==='GET'&&action==='class-report')return json(res,200,accounts.learning.classReport(user,input.classId));
+      if(req.method==='POST'&&action==='classes')return json(res,201,accounts.learning.createClass(user,input));
+      if(req.method==='POST'&&action==='assign')return json(res,201,accounts.learning.assignSet(user,input));
+      if(req.method==='POST'&&action==='review')return json(res,200,accounts.learning.reviewDiagnosis(user,input));
+      if(req.method==='POST'&&['diagnose','insight'].includes(action)){
+        const context=action==='diagnose'?accounts.learning.diagnoseContext(user,input):accounts.learning.insightContext(user,input);
+        const id='learning:'+user.id,now=Date.now(),limit=limits.get(id)||{start:now,count:0};
+        if(now-limit.start>60000){limit.start=now;limit.count=0;}limits.set(id,limit);
+        if(++limit.count>8)return json(res,429,{error:'Hãy chờ một phút trước khi gọi AI tiếp.'});
+        if(action==='diagnose'&&!context.working.trim())return json(res,200,accounts.learning.storeDiagnosis(user,context,{type:'unknown',status:'pending',source:'rules',evidence:'',reason:'Chưa có cách làm trước gợi ý để phân tích.',nextStep:'Giáo viên cần hỏi học sinh trình bày từng bước.',confidence:0}));
+        const result=await learningAI({key,model,task:action,data:context});
+        if(action==='diagnose')return json(res,200,accounts.learning.storeDiagnosis(user,context,result));
+        if(input.scope==='class'){accounts.learning.classReport(user,input.classId);return json(res,200,result);}
+        return json(res,200,accounts.learning.saveInsight(user,input,result,context.revision));
+      }
+    }
     if(['/api/teacher/content','/api/teacher/content/draft'].includes(url.pathname)&&req.method==='POST'){
       if(user.role!=='teacher')return json(res,403,{error:'Only teachers can author content.'});
       const input=await body(req);

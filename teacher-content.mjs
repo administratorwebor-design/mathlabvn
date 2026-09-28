@@ -1,5 +1,6 @@
 import katex from 'katex';
 import {evaluate} from './public/data.js';
+import {errorTypes} from './public/learning-core.js';
 const fail=message=>{throw Object.assign(new Error(message),{status:400});};
 export function validateContent(input){
   const out={kind:input.kind,grade:Number(input.grade)};
@@ -10,9 +11,10 @@ export function validateContent(input){
   if(out.kind==='formula'){check(out.tex);check(out.example);}
   for(const value of Object.values(out))if(typeof value==='string')for(const m of value.matchAll(/\\\(([\s\S]*?)\\\)|\\\[([\s\S]*?)\\\]/g))check(m[1]??m[2]);
   if(out.kind==='exercise'&&(out.answer.length>100||!Number.isFinite(evaluate(out.answer))||/x/i.test(out.answer)))fail('Đáp án bài luyện hiện nhận số hoặc phép tính số, ví dụ 1/2; không nhập LaTeX vào ô đáp án.');
+  if(out.kind==='exercise'&&input.errorTags!==undefined){if(!Array.isArray(input.errorTags)||input.errorTags.length>6||input.errorTags.some(t=>t==='unknown'||!Object.hasOwn(errorTypes,t)))fail('Loại lỗi khắc phục không hợp lệ.');out.errorTags=[...new Set(input.errorTags)];}
   return out;
 }
-export function asExercise(c){return {id:c.id,skill:'teacher-'+c.id,grades:[c.grade],prompt:c.prompt,answer:c.answer,wrong:c.wrong,rule:c.rule,keywords:[],level:'Luyện tập'};}
+export function asExercise(c){return {id:c.id,skill:'teacher-'+c.id,grades:[c.grade],prompt:c.prompt,answer:c.answer,wrong:c.wrong,rule:c.rule,errorTags:c.errorTags||[],keywords:[],level:'Luyện tập'};}
 export async function generateContentDraft({key,model,input,fetcher=fetch}){
   if(!key)throw Object.assign(new Error('Chưa cấu hình Gemini API. Bạn vẫn có thể soạn thủ công bằng thanh công thức.'),{status:503});
   if(!input||typeof input.request!=='string'||input.request.trim().length<5||input.request.length>3000||!['formula','exercise'].includes(input.kind)||![6,7,8,9].includes(Number(input.grade)))fail('Nhập mô tả từ 5–3.000 ký tự và chọn lớp.');
