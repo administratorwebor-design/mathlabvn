@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {parentSummary} from './parent-summary.mjs';
 import {exercises,skills} from './public/data.js';
 import {asExercise} from './teacher-content.mjs';
 import {errorTypes,personalReport,recommend} from './public/learning-core.js';
@@ -75,5 +76,13 @@ export function createLearningService({db,persist,student}){
    for(const s of r.students)for(const a of db.states[s.id].attempts){const custom=db.teacherContents.find(c=>'teacher-'+c.id===a.skill),name=custom?.topic||'';const id=/area|angles|pythagoras|trig|circle/.test(a.skill)?'geometry':/sign|fractions|percent|ratio/.test(a.skill)?'numbers':/distribute|combine|equation|identity|roots|systems|quadratic/.test(a.skill)?'algebra':/xác suất|thống kê/i.test(name)?'statistics':'other';const t=topics.find(t=>t.id===id);t.total++;if(a.initialCorrect)t.correct++;}
    return{classes:r.classes,selectedClass:classId,className:selected?.name||'Tất cả học sinh',days,totalStudents:r.total,assignedRecently:assignments.filter(a=>a.created>=start-(days-1)*day).length,completion:total?Math.round(answered/total*100):null,attention:r.students.filter(s=>s.errors.some(e=>e.count>0)).length,trend,topics,assignments:assignments.filter(a=>a.answered<a.total).sort((a,b)=>a.due.localeCompare(b.due)),events:events.sort((a,b)=>b.time-a.time).slice(0,12),students:r.students.map(s=>({id:s.id,name:s.name,grade:s.grade,attempts:s.total,correct:s.correct,completion:s.assignments.reduce((n,a)=>n+a.result.total,0)?Math.round(s.assignments.reduce((n,a)=>n+a.result.answered,0)/s.assignments.reduce((n,a)=>n+a.result.total,0)*100):null,score:s.assignments.length?Math.round(s.assignments.reduce((n,a)=>n+a.result.score,0)/s.assignments.length*10)/10:null,error:s.errors.filter(e=>e.count).sort((a,b)=>b.count-a.count)[0]||null})),errors:r.errors.map(e=>({label:e.label,count:e.students.reduce((n,s)=>n+s.count,0),students:e.students.length})),catalog:r.catalog.map(e=>({id:e.id,prompt:e.prompt,grade:e.grades.join(', ')}))};
  }
- return {catalog,report,classes,createClass,classReport,assignSet,diagnoseContext,storeDiagnosis,reviewDiagnosis,insightContext,saveInsight,dashboard};
+ function parentDashboard(user,input={}){
+   if(user.role!=='parent')fail(403,'Chỉ phụ huynh được xem tổng quan của con.');
+   const children=user.studentIds.map(id=>db.users.find(u=>u.id===id)).filter(Boolean).map(u=>({id:u.id,name:db.states[u.id]?.profile?.name||u.name,grade:Number(db.states[u.id]?.profile?.grade||7)}));
+   if(!children.length&&!input.studentId)return{children,child:null};
+   const target=student(user,input.studentId),child={...children.find(c=>c.id===target),classes:db.classes.filter(c=>c.studentIds.includes(target)&&db.users.some(u=>u.id===c.teacherId&&u.studentIds.includes(target))).map(c=>c.name)};
+   const list=catalog(target).map(e=>({...e,topic:db.teacherContents.find(c=>c.id===e.id)?.topic||''}));
+   return parentSummary({state:db.states[target],catalog:list,report:report(user,target),child,children,days:input.days});
+ }
+ return {catalog,report,classes,createClass,classReport,assignSet,diagnoseContext,storeDiagnosis,reviewDiagnosis,insightContext,saveInsight,dashboard,parentDashboard};
 }

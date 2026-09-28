@@ -41,7 +41,7 @@ try{
   await page.reload();await page.getByText('Giáo viên: Đúng quy tắc, có bước kiểm chứng.').waitFor();
   await page.goto(base+'/#explore/garden');await page.locator('[data-renderer="webgl"] canvas').waitFor();
   await logout();await login('student2');assert.equal(await page.locator('#main').getByText('Ôn lại phép phân phối',{exact:true}).count(),0);
-  await logout();await login('parent');await page.getByRole('heading',{name:'Cùng con nhìn lại tiến bộ'}).waitFor();assert.equal(await page.locator('.note-form,#assignment-form').count(),0);
+  await logout();await login('parent');await page.locator('#parent-dashboard .pd-hero').waitFor();assert.equal(await page.locator('.note-form,#assignment-form').count(),0);
   await page.goto(base+'/#teacher');await page.waitForURL('**/#home');await page.screenshot({path:'artifacts/parent-dashboard.png',fullPage:true});
   await logout();await login('admin');await page.locator('#create-user-form').waitFor();
   await page.locator('#new-name').fill('Học sinh mới');await page.locator('#new-username').fill('new.student');await page.locator('#new-password').fill(password);await page.locator('#create-user-form button').click();await page.getByText('new.student',{exact:true}).waitFor();
@@ -50,6 +50,6 @@ try{
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'artifacts/student-role-mobile.png',fullPage:true});
   // Session revocation must lock the UI on the next privileged request.
   await context.request.post(base+'/api/auth/logout',{data:{}});await page.goto(base+'/#settings');await page.locator('[data-logout]').click();await page.locator('#login-form').waitFor();
-  await login('parent');await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.locator('#student-picker').waitFor();await context.setOffline(true);await page.reload();await page.locator('#login-form').waitFor();assert.equal(await page.locator('#student-picker').count(),0);await context.setOffline(false);
+  await login('parent');await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.locator('#parent-dashboard .pd-hero').waitFor();await context.setOffline(true);await page.reload();await page.locator('#login-form').waitFor();assert.equal(await page.locator('#parent-dashboard .pd-hero').count(),0);await context.setOffline(false);
   assert.deepEqual(errors,[]);console.log('PASS: login, direct-route guards, storage tampering, isolated student state, teacher workflow, parent read-only view, admin creation, mobile, logout and offline lock');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true});}

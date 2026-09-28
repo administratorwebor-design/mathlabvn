@@ -38,11 +38,18 @@ Gợi ý theo quy tắc ưu tiên cùng kỹ năng, nhãn lỗi và khối lớp
 
 Phụ huynh chỉ xem hồ sơ của con được liên kết; không phân loại lỗi hoặc giao bài. Giáo viên chỉ xem lớp/học sinh được phân công. Dữ liệu cũ giữ nguyên; không có cách làm thì hiển thị chưa đủ bằng chứng. Chưa triển khai gửi Gmail.
 
+Trang tổng quan phụ huynh có banner hồ sơ con, thẻ điểm/tiến độ, biểu đồ theo chủ đề, lỗi thường gặp, bài tập đang chờ hoàn thành, cập nhật gần đây và gợi ý đồng hành. Khi liên kết nhiều con, bộ chọn chuyển toàn bộ số liệu sang đúng hồ sơ. Menu mở riêng kết quả, tiến bộ, lịch bài tập, thông báo và hồ sơ con. Phụ huynh không có nút làm bài thay học sinh.
+
+Điểm trung bình lấy từ các bộ câu hỏi được giao; câu chưa làm tính 0 tạm thời. Tỉ lệ hoàn thành tính số câu đã trả lời trên tổng số câu được giao. Biểu đồ 7/30 ngày thể hiện tỉ lệ đáp án đầu đúng lũy kế trong khoảng được chọn; vòng tròn thể hiện phân bố lượt làm. Mức tiến bộ chỉ được nhận định khi có ít nhất ba bài mới để kiểm chứng sau sửa; trước đó hiển thị “Đang theo dõi”. So sánh số lỗi giữa hai kỳ không tự kết luận con tiến bộ vì lượng bài làm có thể khác nhau.
+
+Chưa có dữ liệu xếp hạng lớp hoặc bài thi thử nên giao diện dùng kiểm chứng sau sửa và lượt ôn lại. Cập nhật gần đây lấy từ bài làm/nhiệm vụ thực tế, không giả lập báo cáo tháng đã gửi. Hồ sơ chưa lưu tên trường nên không hiển thị tên trường mẫu. Trang chưa có dữ liệu hiển thị “—” và trạng thái trống.
+
 ## Kiểm tra
 
 - `npm test`: quyền truy cập, điểm máy chủ, dữ liệu trước/sau, nhãn lỗi, bằng chứng AI, lưu và khởi động lại.
 - `node scripts/check-learning.mjs`: trình duyệt kiểm tra toàn luồng tạo lớp, giao câu, làm bài, AI, xác nhận, giao bài khắc phục, báo cáo và màn hình điện thoại; phản hồi Gemini được giả lập để chạy không tốn API.
 - `node scripts/check-content.mjs` và `node scripts/check-routing-stats.mjs`: tương thích chức năng soạn bài, tiến độ và điều hướng hiện có.
 - `node scripts/check-teacher-dashboard.mjs`: kiểm tra số liệu, chọn lớp, biểu đồ, tìm kiếm, lọc học sinh, các mục menu và bố cục desktop/điện thoại.
+- `node scripts/check-parent-dashboard.mjs`: tổng quan phụ huynh, chuyển con, biểu đồ, tìm kiếm, các trang chi tiết, trạng thái trống, quyền chỉ xem và bố cục điện thoại.
 
 Không có dữ liệu kiểm thử được ghi vào tài khoản thật hoặc snapshot deploy.

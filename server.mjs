@@ -66,6 +66,7 @@ export const server = http.createServer(async (req, res) => {
     if(url.pathname.startsWith('/api/learning/')){
       const action=url.pathname.slice('/api/learning/'.length),input=req.method==='GET'?Object.fromEntries(url.searchParams):await body(req);
       if(req.method==='GET'&&action==='dashboard')return json(res,200,accounts.learning.dashboard(user,input));
+      if(req.method==='GET'&&action==='parent-dashboard')return json(res,200,accounts.learning.parentDashboard(user,input));
       if(req.method==='GET'&&action==='report')return json(res,200,accounts.learning.report(user,input.studentId));
       if(req.method==='GET'&&action==='class-report')return json(res,200,accounts.learning.classReport(user,input.classId));
       if(req.method==='POST'&&action==='classes')return json(res,201,accounts.learning.createClass(user,input));
