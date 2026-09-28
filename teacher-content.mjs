@@ -9,7 +9,7 @@ export function validateContent(input){
   for(const field of fields){if(typeof input[field]!=='string'||!input[field].trim()||input[field].length>2000)fail('Điền đủ các trường, tối đa 2.000 ký tự mỗi trường.');out[field]=input[field].trim();}
   const check=tex=>{try{katex.renderToString(tex,{throwOnError:true,trust:false,strict:'error',maxExpand:200,maxSize:20});}catch{fail('Công thức LaTeX chưa hợp lệ. Hãy kiểm tra phần xem trước.');}};
   if(out.kind==='formula'){check(out.tex);check(out.example);}
-  for(const value of Object.values(out))if(typeof value==='string')for(const m of value.matchAll(/\\\(([\s\S]*?)\\\)|\\\[([\s\S]*?)\\\]/g))check(m[1]??m[2]);
+  for(const value of Object.values(out))if(typeof value==='string')for(const m of value.matchAll(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)|(?<!\\)\$([^$\n]+?)\$/g))check(m[1]??m[2]??m[3]??m[4]);
   if(out.kind==='exercise'&&(out.answer.length>100||!Number.isFinite(evaluate(out.answer))||/x/i.test(out.answer)))fail('Đáp án bài luyện hiện nhận số hoặc phép tính số, ví dụ 1/2; không nhập LaTeX vào ô đáp án.');
   if(out.kind==='exercise'&&input.errorTags!==undefined){if(!Array.isArray(input.errorTags)||input.errorTags.length>6||input.errorTags.some(t=>t==='unknown'||!Object.hasOwn(errorTypes,t)))fail('Loại lỗi khắc phục không hợp lệ.');out.errorTags=[...new Set(input.errorTags)];}
   return out;

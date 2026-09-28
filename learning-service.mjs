@@ -1,20 +1,23 @@
 import {randomUUID} from 'node:crypto';
+import {studentCatalog,teacherCatalog,validDue} from './learning-access.mjs';
+import {createActivityService} from './activity-service.mjs';
 import {parentSummary} from './parent-summary.mjs';
-import {exercises,skills} from './public/data.js';
-import {asExercise} from './teacher-content.mjs';
-import {errorTypes,personalReport,recommend} from './public/learning-core.js';
+import {skills} from './public/data.js';
+import {errorTypes,personalReport,recommend,resolvedAssignments} from './public/learning-core.js';
 const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
 const text=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
 export function createLearningService({db,persist,student}){
  db.diagnoses??={};db.classes??=[];db.learningInsights??={};
+ const activities=createActivityService({db,persist,student});
  function requireTeacher(user){if(user.role!=='teacher')fail(403,'Chỉ giáo viên được dùng chức năng này.');}
- function catalog(id){return [...exercises,...db.teacherContents.filter(c=>c.kind==='exercise'&&db.users.some(t=>t.id===c.teacherId&&t.studentIds.includes(id))).map(asExercise)];}
+ function catalog(id){return studentCatalog(db,id);}
  function diagnoses(id){return db.diagnoses[id]||{};}
- function revision(id){const state=db.states[id];return JSON.stringify([state.profile?.grade||7,state.attempts.length,state.attempts.reduce((n,a)=>Math.max(n,a.completed||0),0),Object.values(diagnoses(id)).reduce((n,d)=>Math.max(n,d.updatedAt||0),0)]);}
- function report(user,id){const target=student(user,id),state=db.states[target],list=catalog(target),grade=Number(state.profile?.grade||7),result=personalReport(state,list,diagnoses(target));result.bySkill=result.bySkill.map(s=>({...s,name:skills.find(k=>k.id===s.skill)?.name||db.teacherContents.find(c=>'teacher-'+c.id===s.skill)?.topic||'Nội dung đã học'}));const insight=db.learningInsights[target];return{studentId:target,grade,...result,recommendations:recommend(state,list,diagnoses(target),grade),insight:insight?.revision===revision(target)?insight:null};}
+ function revision(id){const state=db.states[id];return JSON.stringify([state.profile?.grade||7,state.attempts.length,state.assignments.map(a=>[a.id,a.created]),catalog(id).map(e=>e.id),state.attempts.reduce((n,a)=>Math.max(n,a.completed||0),0),Object.values(diagnoses(id)).reduce((n,d)=>Math.max(n,d.updatedAt||0),0)]);}
+ function report(user,id){const target=student(user,id),state=db.states[target],list=catalog(target),grade=Number(state.profile?.grade||7),result=personalReport(user.role==='teacher'?{...state,assignments:state.assignments.filter(a=>a.teacherId===user.id)}:state,list,diagnoses(target));result.bySkill=result.bySkill.map(s=>({...s,name:skills.find(k=>k.id===s.skill)?.name||db.teacherContents.find(c=>'teacher-'+c.id===s.skill)?.topic||'Nội dung đã học'}));const insight=db.learningInsights[target];return{studentId:target,grade,...result,activities:activities.list(user,target),recommendations:recommend(state,user.role==='teacher'?teacherCatalog(db,user):list,diagnoses(target),grade),insight:insight?.revision===revision(target)?insight:null};}
  function classes(user){requireTeacher(user);return db.classes.filter(c=>c.teacherId===user.id).map(c=>({...c,studentIds:c.studentIds.filter(id=>user.studentIds.includes(id))}));}
  function createClass(user,input){
    requireTeacher(user);if(!text(input.name,80)||![6,7,8,9].includes(Number(input.grade))||!Array.isArray(input.studentIds)||!input.studentIds.length||input.studentIds.length>200)fail(400,'Nhập tên lớp, khối và chọn học sinh.');
+   if(db.classes.some(c=>c.teacherId===user.id&&c.name.toLocaleLowerCase('vi')===input.name.trim().toLocaleLowerCase('vi')))fail(409,'Tên lớp đã tồn tại. Hãy chọn tên khác.');
    const ids=[...new Set(input.studentIds)];for(const id of ids){student(user,id);if(Number(db.states[id].profile?.grade||7)!==Number(input.grade))fail(400,'Học sinh được chọn phải có khối lớp phù hợp trong hồ sơ.');}
    const item={id:randomUUID(),teacherId:user.id,name:input.name.trim(),grade:Number(input.grade),studentIds:ids};db.classes.push(item);persist();return item;
  }
@@ -22,12 +25,12 @@ export function createLearningService({db,persist,student}){
  function classReport(user,classId){
    const ids=members(user,classId),rows=ids.map(id=>{const u=db.users.find(u=>u.id===id),r=report(user,id);return{id,name:u.name,...r};});
    const errors=Object.entries(errorTypes).map(([type,label])=>({type,label,students:rows.filter(r=>r.errors.some(e=>e.type===type&&e.count)).map(r=>({id:r.id,name:r.name,...r.errors.find(e=>e.type===type)})),topics:[...new Set(rows.flatMap(r=>r.evidence.filter(a=>a.diagnosis.type===type).map(a=>a.skill)))].map(skill=>({name:skills.find(s=>s.id===skill)?.name||'Nội dung giáo viên',students:rows.filter(r=>r.evidence.some(a=>a.skill===skill&&a.diagnosis.type===type)).length}))}));
-   return{classes:classes(user),classId:classId||'',students:rows,errors,catalog:[...new Map(ids.flatMap(id=>catalog(id)).map(e=>[e.id,e])).values()],total:rows.length};
+   return{classes:classes(user),classId:classId||'',students:rows,errors,catalog:teacherCatalog(db,user),total:rows.length};
  }
  function assignSet(user,input){
-   requireTeacher(user);if(!text(input.title,200)||!/^\d{4}-\d{2}-\d{2}$/.test(input.due||'')||!Number.isFinite(Date.parse(input.due))||!Array.isArray(input.exerciseIds)||!input.exerciseIds.length||input.exerciseIds.length>30)fail(400,'Chọn 1–30 câu, nhập tên nhiệm vụ và hạn hoàn thành.');
+   requireTeacher(user);if(!text(input.title,200)||!validDue(input.due)||!Array.isArray(input.exerciseIds)||!input.exerciseIds.length||input.exerciseIds.length>30)fail(400,'Chọn 1–30 câu, nhập tên nhiệm vụ và hạn hoàn thành.');
    const ids=input.classId?members(user,input.classId):[student(user,input.studentId)],exerciseIds=[...new Set(input.exerciseIds)];if(!ids.length)fail(400,'Lớp chưa có học sinh.');
-   for(const id of ids){const grade=Number(db.states[id].profile?.grade||7),list=catalog(id);if(exerciseIds.some(eid=>!list.some(e=>e.id===eid&&e.grades.includes(grade))))fail(400,'Bộ câu hỏi phải đúng khối và được phép truy cập cho mọi học sinh được giao.');}
+   for(const id of ids){const grade=Number(db.states[id].profile?.grade||7),list=teacherCatalog(db,user);if(exerciseIds.some(eid=>!list.some(e=>e.id===eid&&e.grades.includes(grade))))fail(400,'Bộ câu hỏi phải đúng khối và được phép truy cập cho mọi học sinh được giao.');}
    const assignment={id:randomUUID(),title:input.title.trim(),due:input.due,exerciseIds,created:Date.now(),teacherId:user.id,skill:'exercise-set'};
    for(const id of ids)db.states[id].assignments.push({...assignment});persist();return{assignment,students:ids.length};
  }
@@ -68,7 +71,7 @@ export function createLearningService({db,persist,student}){
    }
    const assignments=[...grouped.values()];for(const a of assignments)events.push({id:a.id,time:a.created,kind:'assigned',name:'Bạn',title:a.title});
    const total=r.students.reduce((n,s)=>n+s.assignments.reduce((t,a)=>t+a.result.total,0),0),answered=r.students.reduce((n,s)=>n+s.assignments.reduce((t,a)=>t+a.result.answered,0),0);
-   function completionAt(ids,time){let total=0,answered=0;for(const id of ids){const state=db.states[id];for(const a of state.assignments.filter(a=>a.exerciseIds?.length&&a.created<=time)){total+=a.exerciseIds.length;answered+=a.exerciseIds.filter(eid=>state.attempts.some(t=>t.exerciseId===eid&&t.time>=a.created&&t.time<=time)).length;}}return total?Math.round(answered/total*100):null;}
+   function completionAt(ids,time){let total=0,answered=0;for(const id of ids){const state=db.states[id];for(const a of resolvedAssignments(state,catalog(id)).filter(a=>a.teacherId===user.id&&a.created<=time)){total+=a.exerciseIds.length;answered+=a.exerciseIds.filter(eid=>state.attempts.some(t=>t.exerciseId===eid&&t.time>=a.created&&t.time<=time)).length;}}return total?Math.round(answered/total*100):null;}
    // Calendar days are fixed to the app's classroom timezone, independent of Render's UTC host.
    const day=86400000,offset=7*3600000,start=Math.floor((now+offset)/day)*day-offset;
    const trend=Array.from({length:days},(_,i)=>{const time=start-(days-1-i)*day;return{time,label:new Date(time+offset).toISOString().slice(5,10).split('-').reverse().join('/'),selected:completionAt(r.students.map(s=>s.id),Math.min(now,time+day-1)),grade:sameGrade.length?completionAt(sameGrade,Math.min(now,time+day-1)):null};});
@@ -84,5 +87,5 @@ export function createLearningService({db,persist,student}){
    const list=catalog(target).map(e=>({...e,topic:db.teacherContents.find(c=>c.id===e.id)?.topic||''}));
    return parentSummary({state:db.states[target],catalog:list,report:report(user,target),child,children,days:input.days});
  }
- return {catalog,report,classes,createClass,classReport,assignSet,diagnoseContext,storeDiagnosis,reviewDiagnosis,insightContext,saveInsight,dashboard,parentDashboard};
+ return {activities,catalog,report,classes,createClass,classReport,assignSet,diagnoseContext,storeDiagnosis,reviewDiagnosis,insightContext,saveInsight,dashboard,parentDashboard};
 }

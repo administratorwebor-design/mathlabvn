@@ -36,7 +36,13 @@ Gợi ý theo quy tắc ưu tiên cùng kỹ năng, nhãn lỗi và khối lớp
 
 ## Phụ huynh và dữ liệu cũ
 
-Phụ huynh chỉ xem hồ sơ của con được liên kết; không phân loại lỗi hoặc giao bài. Giáo viên chỉ xem lớp/học sinh được phân công. Dữ liệu cũ giữ nguyên; không có cách làm thì hiển thị chưa đủ bằng chứng. Chưa triển khai gửi Gmail.
+Phụ huynh chỉ xem hồ sơ của con được liên kết; không phân loại lỗi hoặc giao bài. Giáo viên chỉ xem lớp/học sinh được phân công. Dữ liệu cũ giữ nguyên; không có cách làm thì hiển thị chưa đủ bằng chứng. Gửi Gmail theo hướng dẫn trong [GMAIL.md](GMAIL.md).
+
+Lời giải thích của cả bài đúng ngay lần đầu và bài sai đều xuất hiện ở **Hồ sơ từng học sinh → Lời giải thích và nhận xét**. Giáo viên lưu nhận xét tại đây; học sinh và phụ huynh xem cùng nhận xét đó. Điểm nhiệm vụ trên phía giáo viên chỉ tính nhiệm vụ do chính giáo viên giao; học sinh và phụ huynh xem tất cả nhiệm vụ. Nhiệm vụ cũ theo chủ đề được đối chiếu với các câu thuộc chủ đề, thay vì bị bỏ khỏi báo cáo.
+
+Phần **Kết quả khám phá và tự kiểm tra công thức** lưu phương án vườn, phản ví dụ, giả thuyết hộp đen và câu tự kiểm tra công thức của học sinh. Máy chủ kiểm tra phần số/biểu thức; giáo viên nhận xét lập luận riêng. Đây là kết quả hoạt động, không tự cộng điểm vào nhiệm vụ đã giao. Mỗi hồ sơ hiển thị 100 hoạt động gần nhất; giới hạn lưu 5.000 hoạt động/học sinh. Hoạt động cũ từ trước lần cập nhật này chỉ nằm trên màn hình và không thể khôi phục thành lịch sử.
+
+Khi đổi giáo viên phụ trách hoặc khối, bài giáo viên soạn đã từng được giao/làm được giữ cho lịch sử và ôn lại. Chỉ các bài thực sự có liên quan tới học sinh được giữ; các bài khác của giáo viên cũ không được mở rộng quyền truy cập. Bài lưu trữ không trộn vào thư viện của khối hiện tại.
 
 Trang tổng quan phụ huynh có banner hồ sơ con, thẻ điểm/tiến độ, biểu đồ theo chủ đề, lỗi thường gặp, bài tập đang chờ hoàn thành, cập nhật gần đây và gợi ý đồng hành. Khi liên kết nhiều con, bộ chọn chuyển toàn bộ số liệu sang đúng hồ sơ. Menu mở riêng kết quả, tiến bộ, lịch bài tập, thông báo và hồ sơ con. Phụ huynh không có nút làm bài thay học sinh.
 

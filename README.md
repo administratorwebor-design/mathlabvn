@@ -42,7 +42,7 @@ Kiểm tra giao diện và điều hướng: `node scripts/check-design.mjs` (sc
 
 Mở `http://localhost:3000/#formulas`. Bản thử có **16 công thức** chia thành số học, đại số và hình học. Three.js + CSS3DRenderer sắp các ô KaTeX thành bảng, hình cầu hoặc xoắn ốc, chuyển cảnh mượt; hỗ trợ kéo xoay, cuộn/chụm thu phóng, phím mũi tên, nút thu/phóng, tự xoay và đặt lại góc nhìn. Có chế độ danh sách; điện thoại mở danh sách trước để chữ dễ đọc, vẫn chọn được 3D. Tôn trọng thiết lập giảm chuyển động của thiết bị.
 
-Nút **Xem chi tiết** dưới mỗi ô mở điều kiện áp dụng, ý nghĩa ký hiệu, các dạng bài dùng được/không dùng được, bài mẫu giải từng bước, phản ví dụ kèm lý do và một câu tự kiểm tra có phản hồi. Nội dung được biên soạn sẵn, không cần gọi AI. Bài tự kiểm tra này chưa ghi vào báo cáo tiến bộ.
+Nút **Xem chi tiết** dưới mỗi ô mở điều kiện áp dụng, ý nghĩa ký hiệu, các dạng bài dùng được/không dùng được, bài mẫu giải từng bước, phản ví dụ kèm lý do và một câu tự kiểm tra có phản hồi. Nội dung được biên soạn sẵn, không cần gọi AI. Kết quả tự kiểm tra được lưu trong hồ sơ học sinh để giáo viên xem và nhận xét, theo dõi riêng với điểm nhiệm vụ.
 
 Sáu công thức hình học có hình minh họa tương tác: Pythagore, diện tích hình chữ nhật/tam giác/hình tròn, thể tích hộp chữ nhật và tổng ba góc tam giác. Thanh trượt cập nhật số đo và kết quả. Hình hộp dùng Three.js WebGL để xoay, có sơ đồ SVG dự phòng nếu thiết bị không hỗ trợ WebGL. Ví dụ giải bên cạnh có dữ kiện cố định; hình thử nghiệm thay đổi độc lập. Phần hình học phẳng dùng SVG để giữ ký hiệu và số đo rõ nét.
 
@@ -60,7 +60,7 @@ Gemini được yêu cầu dùng LaTeX. LaTeX sai/không hỗ trợ sẽ giữ l
 
 Sau khi nâng phiên bản KaTeX bằng npm, chạy `node scripts/vendor-math.mjs` để cập nhật tài nguyên trong `public/vendor/katex/`. Giấy phép MIT được giữ tại đó. Kiểm tra: `npm test`, `node scripts/check-math.mjs` (script tự tạo máy chủ tạm). Bài kiểm tra trình duyệt dùng phản hồi Gemini giả lập; API Gemini thực vẫn cần khóa.
 
-Cần Node.js 22 trở lên. Không cần cài thư viện để chạy ứng dụng.
+Cần Node.js 22 trở lên. Chạy `npm ci` để cài các thư viện trước khi chạy ứng dụng.
 
 ```powershell
 Copy-Item .env.example .env

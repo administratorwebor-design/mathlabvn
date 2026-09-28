@@ -18,7 +18,7 @@ Dùng mật khẩu ứng dụng 16 ký tự, không dùng mật khẩu đăng nh
 
 Giáo viên vào **Thông báo phụ huynh**, chọn lớp hoặc một học sinh, nhập tiêu đề/lời nhắn, tùy chọn kèm kết quả hiện tại → **Xem trước** → kiểm tra địa chỉ và từng nội dung → **Xác nhận gửi**.
 
-Email phụ huynh lấy từ tài khoản đã liên kết qua chức năng nhập Excel. Các tài khoản demo cũ chưa có email sẽ chưa nhận được thư; app liệt kê học sinh thiếu địa chỉ. Không tự đoán địa chỉ email. Hai con có cùng email phụ huynh được gộp vào một email trong đợt gửi; không lộ địa chỉ các gia đình khác. Báo cáo chỉ gồm con nằm trong phạm vi đã chọn và được phân công cho giáo viên.
+Email phụ huynh lấy từ tài khoản đã liên kết qua chức năng nhập Excel. Tài khoản cũ chưa có email: quản trị vào **Quản lý tài khoản → Email phụ huynh và khôi phục tài khoản**, chọn phụ huynh và lưu địa chỉ chính xác. App liệt kê học sinh thiếu địa chỉ; không tự đoán email. Hai con có cùng email phụ huynh được gộp vào một email trong đợt gửi; không lộ địa chỉ các gia đình khác. Báo cáo chỉ gồm con nằm trong phạm vi đã chọn và được phân công cho giáo viên.
 
 ## Trạng thái và giới hạn
 

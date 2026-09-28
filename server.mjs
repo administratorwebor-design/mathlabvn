@@ -27,7 +27,7 @@ const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 const json = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 async function body(req) {
   let text = '';
-  for await (const chunk of req) { text += chunk; if (Buffer.byteLength(text) > (req.url==='/api/parent-mail/preview'?30000:req.url==='/api/roster/preview'?7100000:req.url==='/api/teacher/lessons/upload'?14100000:req.url==='/api/student/state'?5000000:12000)) throw Object.assign(new Error('Yêu cầu vượt quá dung lượng cho phép.'),{status:413}); }
+  for await (const chunk of req) { text += chunk; if (Buffer.byteLength(text) > (req.url==='/api/teacher/content'?60000:req.url==='/api/learning/review'?30000:req.url==='/api/parent-mail/preview'?30000:req.url==='/api/roster/preview'?7100000:req.url==='/api/teacher/lessons/upload'?14100000:req.url==='/api/student/state'?5000000:12000)) throw Object.assign(new Error('Yêu cầu vượt quá dung lượng cho phép.'),{status:413}); }
   return JSON.parse(text);
 }
 export function fallback(ex, explanation) {
@@ -126,6 +126,8 @@ export const server = http.createServer(async (req, res) => {
     }
     if(url.pathname==='/api/teacher/lessons/import-demo'&&req.method==='POST')return json(res,200,accounts.importLessons(user));
     if(url.pathname==='/api/student/state'&&req.method==='PUT')return json(res,200,accounts.saveStudent(user,await body(req)));
+    if(url.pathname==='/api/student/activities'&&req.method==='POST')return json(res,201,accounts.learning.activities.record(user,await body(req)));
+    if(url.pathname==='/api/teacher/activity-notes'&&req.method==='POST')return json(res,200,accounts.learning.activities.note(user,await body(req)));
     if(url.pathname==='/api/teacher/assignments'&&req.method==='POST')return json(res,200,accounts.assign(user,await body(req)));
     if(url.pathname==='/api/teacher/notes'&&req.method==='POST')return json(res,200,accounts.note(user,await body(req)));
     if(url.pathname==='/api/admin/users'){
@@ -134,6 +136,8 @@ export const server = http.createServer(async (req, res) => {
       if(req.method==='POST')return json(res,201,{user:accounts.createUser(await body(req))});
     }
     if(url.pathname==='/api/admin/links'&&req.method==='PUT')return json(res,200,accounts.link(user,await body(req)));
+    if(url.pathname==='/api/admin/parent-email'&&req.method==='PUT')return json(res,200,accounts.learning.updateParentEmail(user,await body(req)));
+    if(url.pathname==='/api/admin/password'&&req.method==='PUT')return json(res,200,accounts.learning.resetPassword(user,await body(req)));
     if (url.pathname === '/api/status') return json(res, 200, { ai: !!key, model: key ? model : null });
     if (url.pathname === '/api/explain' && req.method === 'POST') {
       if(user.role!=='student')return json(res,403,{error:'Chỉ học sinh được gửi bài giải thích.'});

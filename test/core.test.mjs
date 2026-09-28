@@ -1,10 +1,16 @@
 import { test, after, before } from 'node:test';
 import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync} from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { exercises, evaluate, checkAnswer } from '../public/data.js';
-import { server, fallback } from '../server.mjs';
+const dir=mkdtempSync(path.join(os.tmpdir(),'math-core-'));
+process.env.MATH_DB_PATH=path.join(dir,'accounts.json');
+process.env.GEMINI_API_KEY='test-key-never-use-for-live-api';
+const { server, fallback } = await import('../server.mjs');
 let base;
 before(async()=>{ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base=`http://127.0.0.1:${server.address().port}`; });
-after(()=>new Promise(resolve=>server.close(resolve)));
+after(async()=>{await new Promise(resolve=>server.close(resolve));rmSync(dir,{recursive:true,force:true});});
 test('all reference answers are accepted, wrong answers rejected',()=>{
   assert.equal(exercises.length,60);
   for(const e of exercises){assert.equal(checkAnswer(e.answer,e.answer),true,e.id);assert.equal(checkAnswer('999',e.answer),false,e.id);}
@@ -14,6 +20,8 @@ test('arithmetic grammar handles signs, precedence, fractions and equivalent aff
   assert.equal(checkAnswer('6+3*x','3x+6'),true);assert.equal(checkAnswer('2(x+3)+x','3x+6'),true);
   assert.equal(checkAnswer('5x²','5x'),false);assert.equal(checkAnswer('x+4','4'),false);
   assert.equal(checkAnswer('3x+2','3x-2'),false);assert.equal(checkAnswer('1/0','7'),false);
+  assert.equal(checkAnswer('5x+(x+7)*(x+2)*x*(x-1)*(x-3)*(x-11)','5x'),false);
+  assert.equal(checkAnswer('(6x+12)/2','3x+6'),true);assert.equal(checkAnswer('x/x+3x+5','3x+6'),false);
   assert.ok(Number.isNaN(evaluate('globalThis.process.exit()')));assert.ok(Number.isNaN(evaluate('1..2')));
 });
 test('rule feedback does not claim to grade explanations',()=>{

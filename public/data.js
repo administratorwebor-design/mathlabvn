@@ -59,8 +59,22 @@ export function evaluate(input, x = 0) {
 }
 export function checkAnswer(input, expected) {
   const expression = /x/i.test(expected);
-  // These exercises only accept affine expressions; prohibit variable denominators and high powers.
   if (!expression && /x/i.test(input)) return false;
-  if (expression && /[\/^²³]/.test(input)) return false;
-  return [-7, -2, 0, 1, 3, 11].every(x => Math.abs(evaluate(input, x) - evaluate(expected, x)) < 1e-8);
+  if(!expression)return Math.abs(evaluate(input)-evaluate(expected))<1e-8;
+  // Compare coefficients, not a handful of samples: a nonlinear polynomial can
+  // match every sampled point while still being a different expression.
+  const actual=affine(input),target=affine(expected);
+  return !!actual&&!!target&&actual.every((v,i)=>Math.abs(v-target[i])<1e-8);
+}
+function affine(input){
+ const s=String(input).toLowerCase().replace(/−/g,'-').replace(/×|·/g,'*').replace(/÷|:/g,'/').replace(/,/g,'.').replace(/\s/g,'').replace(/²/g,'^2').replace(/³/g,'^3').replace(/(\d|\))(?=x|\()/g,'$1*').replace(/x(?=\()/g,'x*');
+ if(!s||s.length>100||/[^0-9.x+*/^()\-]/.test(s))return null;
+ const tokens=s.match(/\d*\.?\d+|x|[+*/^()\-]/g)||[];if(tokens.join('')!==s)return null;let i=0;
+ const valid=p=>{if(!p.every(Number.isFinite))throw Error();return p;};
+ function atom(){const t=tokens[i++];if(t==='('){const n=sum();if(tokens[i++]!==')')throw Error();return n;}if(t==='x')return [1,0];if(t&&/^\d*\.?\d+$/.test(t))return [0,Number(t)];throw Error();}
+ function power(){const a=atom();if(tokens[i]!=='^')return a;i++;const b=unary();if(b[0]||a[0]&&b[1]!==1)throw Error();return a[0]?a:valid([0,a[1]**b[1]]);}
+ function unary(){if(tokens[i]==='-'){i++;return unary().map(v=>-v);}if(tokens[i]==='+'){i++;return unary();}return power();}
+ function product(){let a=unary();while(['*','/'].includes(tokens[i])){const op=tokens[i++],b=unary();if(op==='/'){if(b[0]||!b[1])throw Error();a=valid(a.map(v=>v/b[1]));}else{if(a[0]&&b[0])throw Error();a=valid([a[0]*b[1]+b[0]*a[1],a[1]*b[1]]);}}return a;}
+ function sum(){let a=product();while(['+','-'].includes(tokens[i])){const sign=tokens[i++]==='+'?1:-1,b=product();a=valid(a.map((v,j)=>v+sign*b[j]));}return a;}
+ try{const answer=sum();return i===tokens.length?valid(answer):null;}catch{return null;}
 }

@@ -8,6 +8,13 @@ export function assignmentScore(assignment,attempts){
  const answered=answers.filter(Boolean).length,correct=answers.filter(a=>a?.initialCorrect).length;
  return {total:ids.length,answered,correct,score:ids.length?Math.round(correct/ids.length*100)/10:null,complete:ids.length>0&&answered===ids.length};
 }
+export function resolvedAssignments(state,catalog){
+ return state.assignments.map(a=>{
+   if(a.exerciseIds?.length)return a;
+   const matching=catalog.filter(e=>e.skill===a.skill),grade=Number(a.grade||state.profile?.grade||7),graded=matching.filter(e=>e.grades.includes(grade));
+   return {...a,exerciseIds:(graded.length?graded:matching).map(e=>e.id)};
+ }).filter(a=>a.exerciseIds.length);
+}
 export function personalReport(state,catalog,diagnoses={}){
  const attempts=[...state.attempts].sort((a,b)=>a.time-b.time),wrong=attempts.filter(a=>!a.initialCorrect);
  const errors=Object.entries(errorTypes).map(([type,label])=>{
@@ -21,7 +28,7 @@ export function personalReport(state,catalog,diagnoses={}){
    return {attemptId:a.id,skill:a.skill,type:diagnoses[a.id]?.type||'unknown',beforeCorrect:false,after:next?{attemptId:next.id,exerciseId:next.exerciseId,correct:next.initialCorrect,time:next.time}:null,recurrences:later.filter(b=>!b.initialCorrect&&diagnoses[a.id]?.type!=='unknown'&&diagnoses[a.id]?.type&&diagnoses[b.id]?.type===diagnoses[a.id].type).length};
  });
  const bySkill=[...new Set(attempts.map(a=>a.skill))].map(skill=>{const rows=attempts.filter(a=>a.skill===skill),recent=rows.slice(-5);return{skill,attempts:rows.length,correct:rows.filter(a=>a.initialCorrect).length,recentCorrect:recent.filter(a=>a.initialCorrect).length,recentTotal:recent.length,status:recent.length<3?'Chưa đủ dữ liệu':recent.every(a=>a.initialCorrect)?'Đang tiến bộ':'Cần củng cố'};});
- return {errors,comparisons,bySkill,total:attempts.length,correct:attempts.filter(a=>a.initialCorrect).length,assignments:state.assignments.filter(a=>a.exerciseIds?.length).map(a=>({...a,result:assignmentScore(a,attempts)})),evidence:wrong.map(a=>({...a,diagnosis:diagnoses[a.id]||{type:'unknown',status:'pending',source:'none',reason:'Chưa có phân tích cách làm.'},exercise:catalog.find(e=>e.id===a.exerciseId)}))};
+ return {reflections:attempts.filter(a=>a.explanation).map(a=>({id:a.id,exerciseId:a.exerciseId,explanation:a.explanation,note:state.notes?.[a.id]||'',exercise:catalog.find(e=>e.id===a.exerciseId)})),errors,comparisons,bySkill,total:attempts.length,correct:attempts.filter(a=>a.initialCorrect).length,assignments:resolvedAssignments(state,catalog).map(a=>({...a,result:assignmentScore(a,attempts)})),evidence:wrong.map(a=>({...a,diagnosis:diagnoses[a.id]||{type:'unknown',status:'pending',source:'none',reason:'Chưa có phân tích cách làm.'},exercise:catalog.find(e=>e.id===a.exerciseId)}))};
 }
 export function recommend(state,catalog,diagnoses={},grade=7){
  const available=catalog.filter(e=>e.grades.includes(Number(grade))),attempts=[...state.attempts].sort((a,b)=>a.time-b.time),weak=attempts.filter(a=>!a.initialCorrect).reverse();

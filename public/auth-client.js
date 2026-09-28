@@ -1,4 +1,4 @@
-export const auth={user:null,students:[],studentId:null,users:[],lessonPublications:[],uploadedLessons:[],teacherContents:[]};
+export const auth={user:null,students:[],studentId:null,users:[],lessonPublications:[],uploadedLessons:[],teacherContents:[],archivedContents:[]};
 export const roleNames={student:'Học sinh',teacher:'Giáo viên',parent:'Phụ huynh',admin:'Quản trị'};
 export const allowed={student:['learning','home','lessons','practice','learn','explore','challenges','progress','notebook','map','formulas','profile','settings','notifications','search'],teacher:['teacher-notifications','teacher-profile','learning','home','teacher','teacher-library','formulas','explore','settings'],parent:['learning','home','parent','settings'],admin:['home','admin','settings']};
 export const canVisit=page=>!!auth.user&&allowed[auth.user.role]?.includes(page);
@@ -6,9 +6,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 export async function api(url,method='GET',data,timeout=15000){
   const response=await fetch(url,{method,cache:'no-store',headers:{'Content-Type':'application/json',...(auth.user?{'X-Account-Id':auth.user.id}:{})},...(data?{body:JSON.stringify(data)}:{}),signal:AbortSignal.timeout(timeout)});
   const result=await response.json();
-  if(!response.ok){if(response.status===401||(response.status===409&&result.sessionChanged))window.dispatchEvent(new Event('auth-expired'));throw Error(result.error||'Không thực hiện được yêu cầu.');}return result;
+  if(!response.ok){if(response.status===401||(response.status===409&&result.sessionChanged))window.dispatchEvent(new Event('auth-expired'));throw Object.assign(Error(result.error||'Không thực hiện được yêu cầu.'),{status:response.status});}return result;
 }
-export async function workspace(studentId){const data=await api('/api/workspace'+(studentId?'?studentId='+encodeURIComponent(studentId):''));Object.assign(auth,{user:data.user,students:data.students,studentId:data.studentId,users:data.users||[],lessonPublications:data.lessonPublications||[],uploadedLessons:data.uploadedLessons||[],teacherContents:data.teacherContents||[]});return data.state;}
+export async function workspace(studentId){const data=await api('/api/workspace'+(studentId?'?studentId='+encodeURIComponent(studentId):''));Object.assign(auth,{user:data.user,students:data.students,studentId:data.studentId,users:data.users||[],lessonPublications:data.lessonPublications||[],uploadedLessons:data.uploadedLessons||[],teacherContents:data.teacherContents||[],archivedContents:data.archivedContents||[]});return data.state;}
 export function loginView(onLogin,message=''){
   document.body.classList.add('auth-screen');document.body.classList.remove('is-dashboard');
   document.querySelector('#navigation').innerHTML='';

@@ -10,7 +10,7 @@ page.on('pageerror',e=>errors.push(e.message));
 try{
  await app.login(page,'teacher');await page.context().request.post(app.base+'/api/teacher/lessons/import-demo',{data:{}});await app.login(page);
  const ids=demoLessons.filter(l=>l.grade===9).flatMap(l=>l.exerciseIds.slice(0,2)),now=Date.now();
- const attempts=ids.map((id,i)=>{const e=exercises.find(e=>e.id===id);return{id:randomUUID(),exerciseId:id,skill:e.skill,time:now+i,completed:now+i,corrected:true,initialCorrect:i%3!==0,answer:i%3!==0?e.answer:'999',explanation:'Demo kiểm tra thống kê và liên kết.',mode:'practice'};});
+ const attempts=ids.map((id,i)=>{const e=exercises.find(e=>e.id===id);return{id:randomUUID(),exerciseId:id,skill:e.skill,time:now+i,completed:now+i,corrected:true,correction:e.answer,initialCorrect:i%3!==0,answer:i%3!==0?e.answer:'999',explanation:'Demo kiểm tra thống kê và liên kết.',mode:'practice'};});
  const data={attempts,reviews:Object.fromEntries(ids.map(id=>[id,{due:now+86400000,interval:0}])),profile:{name:'Nguyễn Minh',grade:'9'}};
  assert.equal((await page.context().request.put(app.base+'/api/student/state',{data})).status(),200);
  await page.goto(app.base);await page.locator('.reference-dashboard').waitFor();
@@ -22,7 +22,7 @@ try{
  }
  await page.goto(app.base+'/#progress');assert.deepEqual(await page.locator('.metric strong').allTextContents(),['10','4','0','1']);
  // A second client saves new progress while this tab stays open.
- const extra=exercises.find(e=>e.id==='roots9-3');data.attempts.push({id:randomUUID(),exerciseId:extra.id,skill:extra.skill,time:now+20,completed:now+20,corrected:true,initialCorrect:true,answer:extra.answer,explanation:'Thêm bài từ thiết bị thứ hai.',mode:'practice'});
+ const extra=exercises.find(e=>e.id==='roots9-3');data.attempts.push({id:randomUUID(),exerciseId:extra.id,skill:extra.skill,time:now+20,completed:now+20,corrected:true,correction:extra.answer,initialCorrect:true,answer:extra.answer,explanation:'Thêm bài từ thiết bị thứ hai.',mode:'practice'});
  await page.context().request.put(app.base+'/api/student/state',{data});await page.goto(app.base+'/#home');await page.waitForFunction(()=>document.querySelector('.subject-row small')?.textContent==='3/3');
  // Reproduce an older catalog receiving an exercise it does not know.
  await page.route('**/api/workspace*',async route=>{const response=await route.fetch(),body=await response.json();body.state.attempts.push({id:randomUUID(),exerciseId:'future-lesson-1',skill:'future',time:now,initialCorrect:false,corrected:true,explanation:'Lịch sử bài thuộc phiên bản khác.'});body.state.reviews['future-lesson-1']={due:now,interval:0};await route.fulfill({json:body});});
@@ -34,6 +34,6 @@ try{
  await page.route('**/api/version',r=>r.fulfill({json:{version:'test-next-build'}}));await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.locator('#app-update-banner').waitFor();assert.equal(await page.locator('#profile-name').inputValue(),'Bản nháp chưa lưu');
  await page.unroute('**/api/version');await page.locator('#logout').click();await page.locator('#login-form').waitFor();await app.login(page,'teacher');await page.reload();await page.goto(app.base+'/#teacher');await page.locator('#assignment-form').waitFor();
  await page.locator('#assignment-title').fill('Nhiệm vụ căn bậc hai');await page.locator('#assignment-skill').selectOption('roots9');await page.locator('#assignment-due').fill('2026-10-01');await page.locator('#assignment-form button').click();
- await page.locator('a[href="#teacher-library/roots9"]').click();await page.getByRole('heading',{name:'Bài học của nhiệm vụ',exact:true}).waitFor();await page.getByRole('heading',{name:'Căn bậc hai và điều kiện',exact:true}).waitFor();assert.equal(await page.locator('.formula-atlas').count(),0);
+ await page.locator('#main a[href^="#learning/"]').first().click();await page.getByRole('heading',{name:'Hồ sơ lỗi và khắc phục',exact:true}).waitFor();await page.getByText('Nhiệm vụ căn bậc hai',{exact:false}).waitFor();assert.equal(await page.locator('.formula-atlas').count(),0);
  assert.deepEqual(errors,[]);console.log('PASS: stats agree, completion vs accuracy, all navigation, new progress refresh, unknown historic exercise, safe update notice and teacher assignment target');
 }finally{await browser.close();await app.close();}

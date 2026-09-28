@@ -50,6 +50,10 @@ export function plainToTex(input) {
   const value=expression();if(i!==tokens.length)throw Error('Trailing tokens');return value.tex;
 }
 export function formula(input,display=false){try{return math(plainToTex(input),display);}catch{return `<span class="math-fallback">${escape(input)}</span>`;}}
+export function solutionHTML(input){
+ if(/\\[([]|\$/.test(String(input)))return richMath(input);
+ try{return math(plainToTex(input));}catch{return richMath(input);}
+}
 export function promptHTML(ex){
   if(!ex)return '<span class="missing-exercise">Nội dung bài này chưa có trong phiên bản hiện tại.</span>';
   if(ex.richPrompt||/\\[([]|\$/.test(ex.prompt))return richMath(ex.prompt);

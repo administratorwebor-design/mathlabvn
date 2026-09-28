@@ -1,5 +1,6 @@
 import {createLearningService} from './learning-service.mjs';
 import {createParentMailService} from './parent-mail.mjs';
+import {studentCatalog,historicalContentIds,validDue} from './learning-access.mjs';
 import {createRosterService} from './roster-import.mjs';
 import {validateContent,asExercise} from './teacher-content.mjs';
 import {readFileSync,writeFileSync,renameSync,mkdirSync,existsSync} from 'node:fs';
@@ -11,16 +12,18 @@ import {demoLessons} from './public/demo-lessons.js';
 export const emptyState=()=>({attempts:[],reviews:{},assignments:[],notes:{}});
 const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
 const str=(s,max)=>typeof s==='string'&&s.length<=max;
-const publicUser=u=>({id:u.id,username:u.username,name:u.name,role:u.role,studentIds:u.studentIds});
+const publicUser=u=>({id:u.id,username:u.username,name:u.name,role:u.role,studentIds:u.studentIds,...(u.role==='parent'?{email:u.email||''}:{})});
 export function createStore(filename=process.env.MATH_DB_PATH||path.resolve('private/accounts.json')){
   let db=existsSync(filename)?JSON.parse(readFileSync(filename,'utf8')):{users:[],states:{}};
   const sessions=new Map(),limits=new Map();
   db.lessonPublications??=[];
   db.uploadedLessons??=[];
   db.teacherContents??=[];
+  for(const u of db.users)if(u.role==='student'&&db.states[u.id]?.profile?.name?.trim())u.name=db.states[u.id].profile.name.trim();
   function teacherContents(user){return db.teacherContents.filter(c=>canReadUpload(user,c));}
+  function archivedContents(user){if(user.role!=='student')return [];const ids=historicalContentIds(db,user.id);return db.teacherContents.filter(c=>c.kind==='exercise'&&ids.has(c.id)&&!canReadUpload(user,c));}
   function publishContent(user,input){if(user.role!=='teacher')fail(403,'Only teachers can publish.');const content={...validateContent(input),id:randomUUID(),teacherId:user.id,publishedAt:Date.now()};db.teacherContents.push(content);persist();return {content};}
-  function contentExercises(user){return teacherContents(user).filter(c=>c.kind==='exercise').map(asExercise);}
+  function contentExercises(user){return [...teacherContents(user),...archivedContents(user)].filter(c=>c.kind==='exercise').map(asExercise);}
   function persist(){mkdirSync(path.dirname(filename),{recursive:true});writeFileSync(filename+'.tmp',JSON.stringify(db),{mode:0o600});renameSync(filename+'.tmp',filename);}
   function createUser(input){
     const {username,password,name,role,studentIds=[]}=input;
@@ -52,12 +55,12 @@ export function createStore(filename=process.env.MATH_DB_PATH||path.resolve('pri
     if(user.role==='admin')return{user:publicUser(user),users:db.users.map(publicUser),state:emptyState(),students:[]};
     const students=(user.role==='student'?[user]:db.users.filter(u=>user.studentIds.includes(u.id))).map(publicUser);
     if(!students.length&&!id)return{user:publicUser(user),students,state:emptyState(),studentId:null};
-    const target=student(user,id);return{user:publicUser(user),students,studentId:target,state:db.states[target]};
+    const target=student(user,id);return{user:publicUser(user),students,studentId:target,state:db.states[target],archivedContents:archivedContents(user)};
   }
   function saveStudent(user,input){
     if(user.role!=='student')fail(403,'Chỉ học sinh được lưu bài làm của mình.');
     const {attempts,reviews,profile}=input;
-    const exercisesForUser=[...exercises,...db.teacherContents.filter(c=>c.kind==='exercise'&&db.users.some(t=>t.id===c.teacherId&&t.studentIds.includes(user.id))).map(asExercise)];
+    const exercisesForUser=studentCatalog(db,user.id);
     if(!Array.isArray(attempts)||attempts.length>20000||!reviews||typeof reviews!=='object'||Array.isArray(reviews))fail(400,'Dữ liệu học tập không hợp lệ.');
     const existing=new Map(db.states[user.id].attempts.map(a=>[a.id,a]));
     const clean=attempts.map(a=>{
@@ -66,20 +69,22 @@ export function createStore(filename=process.env.MATH_DB_PATH||path.resolve('pri
       if(a.correction!==undefined&&!str(a.correction,100))fail(400,'Đáp án sửa chưa hợp lệ.');
       const old=existing.get(a.id),ex=exercisesForUser.find(e=>e.id===a.exerciseId);
       if(old&&(old.exerciseId!==a.exerciseId||old.answer!==a.answer||old.skill!==a.skill))fail(409,'Không thể sửa đáp án đầu đã lưu.');
-      const modern=a.working!==undefined||old?.working!==undefined;
-      const corrected=modern?(!!a.correction&&checkAnswer(a.correction,ex.answer)):a.corrected===true;
-      return{id:a.id,exerciseId:a.exerciseId,skill:a.skill,time:old?.time??a.time,mode:old?.mode??a.mode,answer:old?.answer??a.answer,initialCorrect:old?.initialCorrect??checkAnswer(a.answer,ex.answer),corrected:old?.corrected||corrected,...(old?.completed?{completed:old.completed}:Number.isFinite(a.completed)&&corrected?{completed:a.completed}:{}),...(a.explanation?{explanation:a.explanation}:{}),...(modern?{working:old?.working??a.working??'',correction:a.correction||old?.correction||''}:{})};
+      const modern=!old||a.working!==undefined||old?.working!==undefined;
+      const corrected=!!a.correction&&checkAnswer(a.correction,ex.answer);
+      return{id:a.id,exerciseId:a.exerciseId,skill:a.skill,time:old?.time??Math.min(Date.now(),Math.max(0,a.time)),mode:old?.mode??a.mode,answer:old?.answer??a.answer,initialCorrect:old?.initialCorrect??checkAnswer(a.answer,ex.answer),corrected:old?.corrected||corrected,...(old?.completed?{completed:old.completed}:Number.isFinite(a.completed)&&corrected?{completed:Math.min(Date.now(),Math.max(old?.time??a.time,a.completed))}:{}),...((a.explanation??old?.explanation)?{explanation:a.explanation??old.explanation}:{}),...(modern?{working:old?.working??a.working??'',correction:old?.corrected&&old.correction?old.correction:a.correction||old?.correction||''}:{})};
     });
     if(new Set(clean.map(a=>a.id)).size!==clean.length)fail(400,'Bài làm bị trùng.');
     const cleanReviews={};for(const [id,r] of Object.entries(reviews)){if(!exercisesForUser.some(e=>e.id===id)||!r||!Number.isFinite(r.due)||![0,1,2].includes(r.interval))fail(400,'Lịch ôn không hợp lệ.');cleanReviews[id]={due:r.due,interval:r.interval};}
-    if(profile&&(!str(profile.name,40)||!['6','7','8','9'].includes(String(profile.grade))))fail(400,'Hồ sơ không hợp lệ.');
-    const state=db.states[user.id];state.attempts=[...clean,...state.attempts.filter(a=>!clean.some(c=>c.id===a.id))];state.reviews=cleanReviews;if(profile)state.profile={name:profile.name,grade:String(profile.grade)};persist();return{ok:true};
+    if(profile&&(!str(profile.name,80)||!profile.name.trim()||!['6','7','8','9'].includes(String(profile.grade))))fail(400,'Hồ sơ không hợp lệ.');
+    const state=db.states[user.id];state.attempts=[...clean,...state.attempts.filter(a=>!clean.some(c=>c.id===a.id))];state.reviews={...state.reviews,...cleanReviews};if(profile){state.profile={name:profile.name.trim(),grade:String(profile.grade)};db.users.find(u=>u.id===user.id).name=state.profile.name;}persist();return{ok:true};
   }
   function assign(user,input){
     if(user.role!=='teacher')fail(403,'Chỉ giáo viên được giao nhiệm vụ.');
     const target=student(user,input.studentId);
-    if(!str(input.title,200)||!input.title.trim()||!skills.some(s=>s.id===input.skill)||!str(input.due,10)||!/^\d{4}-\d{2}-\d{2}$/.test(input.due))fail(400,'Nhiệm vụ không hợp lệ.');
-    db.states[target].assignments.push({id:randomUUID(),title:input.title.trim(),skill:input.skill,due:input.due,created:Date.now(),teacherId:user.id});persist();return{ok:true};
+    if(!str(input.title,200)||!input.title.trim()||!skills.some(s=>s.id===input.skill)||!validDue(input.due))fail(400,'Nhiệm vụ không hợp lệ.');
+    const grade=Number(db.states[target].profile?.grade||7),exerciseIds=exercises.filter(e=>e.skill===input.skill&&e.grades.includes(grade)).map(e=>e.id);
+    if(!exerciseIds.length)fail(400,'Chủ đề không có bài phù hợp khối của học sinh.');
+    db.states[target].assignments.push({id:randomUUID(),title:input.title.trim(),skill:input.skill,exerciseIds,grade,due:input.due,created:Date.now(),teacherId:user.id});persist();return{ok:true};
   }
   function note(user,input){
     if(user.role!=='teacher')fail(403,'Chỉ giáo viên được nhận xét.');
@@ -92,6 +97,21 @@ export function createStore(filename=process.env.MATH_DB_PATH||path.resolve('pri
     const target=db.users.find(u=>u.id===input.userId);
     if(!target||!['teacher','parent'].includes(target.role)||!Array.isArray(input.studentIds)||input.studentIds.some(id=>!db.users.some(u=>u.id===id&&u.role==='student')))fail(400,'Liên kết không hợp lệ.');
     target.studentIds=[...new Set(input.studentIds)];persist();return{ok:true};
+  }
+  function updateParentEmail(user,input){
+    if(user.role!=='admin')fail(403,'Chỉ quản trị được cập nhật email phụ huynh.');
+    const target=db.users.find(u=>u.id===input.userId&&u.role==='parent'),email=typeof input.email==='string'?input.email.trim().toLowerCase():'';
+    if(!target||email.length>254||! /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email))fail(400,'Chọn phụ huynh và nhập email hợp lệ.');
+    if(db.users.some(u=>u.id!==target.id&&u.email?.toLowerCase()===email))fail(409,'Email này đã thuộc tài khoản khác. Kiểm tra lại liên kết gia đình.');
+    const old=target.email;target.email=email;try{persist();}catch(error){target.email=old;throw error;}return {ok:true};
+  }
+  function resetPassword(user,input){
+    if(user.role!=='admin')fail(403,'Chỉ quản trị được đặt lại mật khẩu.');
+    const target=db.users.find(u=>u.id===input.userId);
+    if(!target||target.id===user.id||!str(input.password,200)||input.password.length<12)fail(400,'Chọn tài khoản khác và nhập mật khẩu mới từ 12 đến 200 ký tự.');
+    const old={salt:target.salt,hash:target.hash};target.salt=randomBytes(16).toString('hex');target.hash=scryptSync(input.password,target.salt,64).toString('hex');
+    try{persist();}catch(error){Object.assign(target,old);throw error;}
+    for(const [token,s] of sessions)if(s.id===target.id)sessions.delete(token);return {ok:true};
   }
   function importLessons(user){
     if(user.role!=='teacher')fail(403,'Chỉ giáo viên được nạp bộ bài học.');
@@ -126,6 +146,7 @@ export function createStore(filename=process.env.MATH_DB_PATH||path.resolve('pri
   function uploadedFile(user,id){const lesson=db.uploadedLessons.find(l=>l.id===id);if(!lesson||!canReadUpload(user,lesson))fail(404,'Không tìm thấy tài liệu hoặc bạn không có quyền truy cập.');return{lesson:publicLesson(lesson),content:readFileSync(path.join(uploadDir,lesson.fileKey))};}
   const learning=createLearningService({db,persist,student});
   learning.enableParentMail=mailer=>createParentMailService({db,persist,learning,mailer});
+  learning.updateParentEmail=updateParentEmail;learning.resetPassword=resetPassword;
   learning.roster=createRosterService({db,persist});
   return{learning,teacherContents,publishContent,contentExercises,createUser,login,authenticate,workspace,saveStudent,assign,note,link,importLessons,uploadLesson,uploadedLessons,uploadedFile,lessonPublications:()=>db.lessonPublications.map(({id,publishedAt})=>({id,publishedAt})),logout:token=>sessions.delete(token),users:()=>db.users.map(publicUser)};
 }
