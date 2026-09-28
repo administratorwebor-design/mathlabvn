@@ -25,7 +25,7 @@ const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 const json = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 async function body(req) {
   let text = '';
-  for await (const chunk of req) { text += chunk; if (Buffer.byteLength(text) > (req.url==='/api/teacher/lessons/upload'?14100000:req.url==='/api/student/state'?5000000:12000)) throw Object.assign(new Error('Yêu cầu vượt quá dung lượng cho phép.'),{status:413}); }
+  for await (const chunk of req) { text += chunk; if (Buffer.byteLength(text) > (req.url==='/api/roster/preview'?7100000:req.url==='/api/teacher/lessons/upload'?14100000:req.url==='/api/student/state'?5000000:12000)) throw Object.assign(new Error('Yêu cầu vượt quá dung lượng cho phép.'),{status:413}); }
   return JSON.parse(text);
 }
 export function fallback(ex, explanation) {
@@ -63,6 +63,15 @@ export const server = http.createServer(async (req, res) => {
     if(url.pathname.startsWith('/api/')&&url.pathname!=='/api/status'&&!user)return json(res,401,{error:'Vui lòng đăng nhập để tiếp tục.'});
     if(url.pathname==='/api/auth/session'&&req.method==='GET')return json(res,200,{user:{id:user.id,name:user.name,username:user.username,role:user.role}});
     if(url.pathname==='/api/workspace'&&req.method==='GET')return json(res,200,{...accounts.workspace(user,url.searchParams.get('studentId')),lessonPublications:accounts.lessonPublications(),uploadedLessons:accounts.uploadedLessons(user),teacherContents:accounts.teacherContents(user)});
+    if(url.pathname.startsWith('/api/roster/')){
+      if(user.role!=='teacher')return json(res,403,{error:'Chỉ giáo viên được nhập danh sách.'});
+      if(url.pathname==='/api/roster/template'&&req.method==='GET'){
+        const file=await accounts.learning.roster.template();res.writeHead(200,{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':'attachment; filename="mau-danh-sach.xlsx"','Cache-Control':'no-store'});return res.end(file);
+      }
+      if(url.pathname==='/api/roster/preview'&&req.method==='POST')return json(res,200,await accounts.learning.roster.preview(user,await body(req)));
+      if(url.pathname==='/api/roster/commit'&&req.method==='POST')return json(res,200,accounts.learning.roster.commit(user,(await body(req)).id));
+      return json(res,404,{error:'Không tìm thấy chức năng.'});
+    }
     if(url.pathname.startsWith('/api/learning/')){
       const action=url.pathname.slice('/api/learning/'.length),input=req.method==='GET'?Object.fromEntries(url.searchParams):await body(req);
       if(req.method==='GET'&&action==='dashboard')return json(res,200,accounts.learning.dashboard(user,input));

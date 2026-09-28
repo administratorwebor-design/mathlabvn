@@ -1,4 +1,5 @@
 import {teacherClassSelection} from './teacher-dashboard.js';
+import {mountRoster} from './roster-import.js';
 import {errorTypes} from './learning-core.js';
 import {richMath,promptHTML} from './math.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -32,6 +33,7 @@ export async function mountLearning(root,{request,auth,studentId,view}){
      const keep={classes:[0,2,4],assignments:[0,2,3],progress:[0,2],errors:[0,1,2]};
      cards.forEach((card,i)=>card.hidden=!keep[view].includes(i));
    }
+   mountRoster(get('#learning-class-form').parentElement,{request,auth,onCreated:async id=>{classId=id;teacherClassSelection.set(auth.user.id,id);await loadClass();}});
    get('#learning-class').addEventListener('change',e=>{classId=e.target.value;teacherClassSelection.set(auth.user.id,classId);loadClass().catch(e=>message(e.message));});
    host.querySelectorAll('[data-open-student]').forEach(b=>b.addEventListener('click',()=>loadPersonal(b.dataset.openStudent).catch(e=>message(e.message))));
    get('#class-insight').addEventListener('click',e=>task(e.target,async()=>{const value=await request('/api/learning/insight','POST',{scope:'class',classId},45000);if(alive()&&get('#class-insight-result')){get('#class-insight-result').innerHTML=insightHTML({...value,exerciseIds:[]});host.querySelectorAll('#assignment-questions input').forEach(box=>{box.checked=value.exerciseIds.includes(box.value);});}}));
