@@ -14,6 +14,8 @@ const page=await browser.newPage({viewport:{width:1536,height:1024}}),errors=[];
 try{
  await app.login(page,'teacher');await page.goto(app.base);await page.locator('#td-class').waitFor();await page.locator('#td-class').selectOption(group.id);await page.getByRole('heading',{name:'Tiến độ học tập · 7A',exact:true}).waitFor();
  const data=await (await page.request.get(app.base+'/api/learning/dashboard?classId='+group.id)).json();assert.equal(data.totalStudents,5);assert.equal(data.assignedRecently,4);assert.equal(data.trend.length,7);assert.equal(data.completion,73);assert.equal(data.attention,2);assert.equal(data.assignments.length,4);
+ assert.ok(await page.locator('.td-event .katex').count()>0);
+ assert.ok(await page.locator('.teacher-dashboard table').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=14));
  await page.screenshot({path:'artifacts/teacher-dashboard-desktop.png',fullPage:true});
  await page.locator('[data-chart-tab="errors"]').click();await page.locator('.td-error-bars').waitFor();await page.locator('[data-chart-tab="topics"]').click();await page.locator('.td-wide-topics').waitFor();await page.locator('#td-days').selectOption('30');await page.waitForFunction(()=>document.querySelector('#td-days')?.value==='30'&&document.querySelectorAll('.td-line-chart line').length===35);
  await page.locator('#td-student-search').fill('Trang');assert.equal(await page.locator('#td-student-table tbody tr').count(),1);await page.locator('#td-student-search').fill('');await page.locator('#td-student-filter').selectOption('attention');assert.equal(await page.locator('#td-student-table tbody tr').count(),2);

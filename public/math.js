@@ -52,7 +52,7 @@ export function plainToTex(input) {
 export function formula(input,display=false){try{return math(plainToTex(input),display);}catch{return `<span class="math-fallback">${escape(input)}</span>`;}}
 export function promptHTML(ex){
   if(!ex)return '<span class="missing-exercise">Nội dung bài này chưa có trong phiên bản hiện tại.</span>';
-  if(ex.richPrompt)return richMath(ex.prompt);
+  if(ex.richPrompt||/\\[([]|\$/.test(ex.prompt))return richMath(ex.prompt);
   const match=ex.prompt.match(/^(Tính |Khai triển |Bỏ ngoặc trong |Thu gọn |Giải phương trình )(.+?)(\. Chỉ nhập giá trị x\.|\.)$/u);
   return match?escape(match[1])+formula(match[2])+escape(match[3]):escape(ex.prompt);
 }
