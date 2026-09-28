@@ -1,3 +1,4 @@
+import {teacherNavigation,teacherDashboardHTML,mountTeacherDashboard} from './teacher-dashboard.js';
 import {learningPageHTML,mountLearning,workingHTML,diagnosisActionHTML,diagnosisHTML} from './learning-view.js';
 import {bindContentEditor,customFormulasHTML} from './content-editor.js';
 import {bindLessonUpload,uploadedLessonsHTML} from './lesson-upload.js';
@@ -38,6 +39,7 @@ const mistakes = () => state.attempts.filter(a => !a.initialCorrect);
 function stat(id) {return summary().bySkill[id]||{count:0,correct:0,percent:0,completed:0,total:0,label:'Chưa đủ dữ liệu'};}
 function storedExercise(id){return allExercises.find(e=>e.id===id)||{id,skill:state.attempts.find(a=>a.exerciseId===id)?.skill||'',prompt:'Bài đã lưu: '+id,rule:'Nội dung bài này chưa có trong phiên bản hiện tại. Lịch sử và lời giải thích vẫn được giữ lại.'};}
 function nav(page) {
+  if(auth.user.role==='teacher'){ $('#navigation').innerHTML=teacherNavigation(); return; }
   const items=[...navigation.slice(0,1),...(auth.user.role==='teacher'?[['teacher-library','Kho bài học','book']]:[]),...navigation.slice(1),...(auth.user.role==='admin'?[['admin','Tài khoản','people']]:[])].filter(([id])=>canVisit(id));
   $('#navigation').innerHTML=items.map(([id,name,symbol])=>`<a class="nav-item ${page===id?'active':''}" href="#${id}" ${page===id?'aria-current="page"':''}>${icon(symbol)}<span>${id==='learning'&&auth.user.role==='teacher'?'Bản đồ lỗi lớp':id==='home'&&auth.user.role!=='student'?'Tổng quan':name}</span></a>`).join('');
 }
@@ -47,6 +49,7 @@ const studentSelection = () => selectionHTML();
 function metrics() { const totals=summary();return `<div class="metrics">${[[totals.discovered,'Bài đã khám phá','▧'],[totals.corrected,'Lượt lỗi đã tự sửa','↻'],[due().length,'Bài đến hẹn ôn lại','◷'],[totals.days,'Ngày có học tập','↗']].map(([n,label,icon])=>`<div class="metric"><span class="metric-icon">${icon}</span><div><strong>${n}</strong><small>${label}</small></div></div>`).join('')}</div>`; }
 function skillRows() { return skills.map((s,i) => { const v=stat(s.id); return `<a href="#practice/${s.id}" class="skill-row"><span class="skill-symbol">${['±','( )','x','＝'][i%4]}</span><div class="skill-content"><div class="skill-title">${s.name}<span>${v.count ? `${v.percent}% đúng` : 'Chưa học'}</span></div><div class="track"><span style="width:${v.percent}%;background:${s.color}"></span></div></div></a>`; }).join(''); }
 function home() {
+  if(auth.user.role==='teacher')return teacherDashboardHTML();
   if(auth.user.role!=='student') return rolePage();
   return referenceHome({state:{...state,attempts:state.attempts.filter(a=>exercises.some(e=>e.id===a.exerciseId))},skills,stat,due,escape:esc,skillName,grade,exercises});
 }
@@ -86,6 +89,7 @@ function rolePage(role=auth.user.role) {
   return intro('QUAN SÁT CÁCH NGHĨ CỦA HỌC SINH','Góc giáo viên','Giao nhiệm vụ và nhận xét lập luận dựa trên quá trình học.')+studentSelection()+`<div class="split"><section class="card"><h2>Giao một nhiệm vụ</h2><form id="assignment-form"><label class="field" for="assignment-skill">Kỹ năng</label><select id="assignment-skill">${skills.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select><label class="field" for="assignment-title">Lời nhắn cho học sinh</label><input id="assignment-title" class="input" maxlength="200" required placeholder="Làm 3 bài và giải thích cách sửa"><label class="field" for="assignment-due">Hạn hoàn thành</label><input id="assignment-due" class="input" type="date" required><div class="button-row"><button class="btn">Lưu nhiệm vụ →</button></div></form></section><section class="card"><h2>Nhiệm vụ đã giao</h2>${state.assignments.length?state.assignments.map(a=>`<div class="list-row"><div><h3>${esc(a.title)}</h3><p>${skillName(a.skill)} · Hạn ${esc(a.due)}</p><p>${state.attempts.filter(t=>(a.exerciseIds?.length?a.exerciseIds.includes(t.exerciseId):t.skill===a.skill)&&t.time>=a.created&&t.completed).length} lượt hoàn thành từ lúc giao</p></div><a class="btn text" href="${a.exerciseIds?.length?'#learning/'+auth.studentId:'#teacher-library/'+a.skill}">Xem bài học →</a></div>`).join(''):empty('Chưa có nhiệm vụ cho học sinh này.')}</section></div><section class="card"><h2>Lời giải thích cần nhận xét</h2>${state.attempts.some(a=>a.explanation)?state.attempts.filter(a=>a.explanation).slice().reverse().map(a=>`<article class="list-row" style="display:block"><span class="badge">${skillName(a.skill)} · ${date(a.time)}</span><p>${promptHTML(allExercises.find(e=>e.id===a.exerciseId))}</p><p><strong>Học sinh:</strong> ${richMath(a.explanation)}</p><form class="note-form" data-id="${a.id}"><label class="field" for="note-${a.id}">Nhận xét nguyên nhân, quy tắc và cách kiểm chứng</label><textarea id="note-${a.id}" maxlength="1500" required>${esc(state.notes[a.id]||'')}</textarea><div class="button-row"><button class="btn secondary">Lưu nhận xét</button></div></form></article>`).join(''):empty('Học sinh này chưa gửi lời giải thích.')}</section>`;
 }
 function extraPage(page,id) {
+  if(page==='teacher-profile')return intro('TÀI KHOẢN GIÁO VIÊN','Hồ sơ giáo viên','Thông tin theo tài khoản đăng nhập.')+`<section class="card"><h2>${esc(auth.user.name)}</h2><p>Tên đăng nhập: ${esc(auth.user.username)}</p><p>Vai trò: Giáo viên</p><p>${auth.students.length} học sinh được phân công.</p><a class="btn" href="#learning/classes">Quản lý lớp học</a></section>`;
   if(page==='lessons'&&auth.lessonPublications.some(p=>demoLessons.some(l=>l.id===p.id&&l.grade===grade)))return studentLessonsHTML(grade,auth.lessonPublications);
   if(page==='parent')return studentSelection()+progress(true);
   if(page==='teacher')return rolePage('teacher');
@@ -121,6 +125,7 @@ function bindAccounts(){
   bindLessonUpload($('#main'),{request:api,onPublished:async result=>{if(auth.user?.id!==uploaderId)return;state=await workspace(auth.studentId);render();toast(result.duplicate?'Bài này đã được đăng, không tạo trùng.':'Đã đăng bài cho học sinh đúng lớp.');}});
   $('[data-import-lessons]')?.addEventListener('click',async e=>{const button=e.currentTarget;button.disabled=true;try{const result=await api('/api/teacher/lessons/import-demo','POST',{});state=await workspace(auth.studentId);render();$('#lesson-import-status').textContent=`Đã nạp thêm ${result.added} bài. Tổng ${result.total} bài học, chia đều cho lớp 6–9.`;}catch(error){toast(error.message);button.disabled=false;}});
   $('[data-logout]')?.addEventListener('click',logout);
+  $('[data-teacher-logout]')?.addEventListener('click',logout);
   $('#student-picker')?.addEventListener('change',async e=>{try{state=await workspace(e.target.value);render();}catch(error){toast(error.message);}});
   $('#create-user-form')?.addEventListener('submit',async e=>{e.preventDefault();const button=e.currentTarget.querySelector('button');button.disabled=true;try{await api('/api/admin/users','POST',{name:$('#new-name').value.trim(),username:$('#new-username').value.trim(),password:$('#new-password').value,role:$('#new-role').value});state=await workspace();render();toast('Đã tạo tài khoản.');}catch(error){$('#admin-result').textContent=error.message;}finally{button.disabled=false;}});
   const refreshLinks=()=>{const user=auth.users.find(u=>u.id===$('#link-user')?.value);document.querySelectorAll('.link-students input').forEach(input=>input.checked=!!user?.studentIds.includes(input.value));};
@@ -162,14 +167,20 @@ function renderPage() {
   $('.header-profile strong').textContent=profile.name;
   $('.header-profile small').textContent=({student:'Học sinh - Lớp '+profile.grade,teacher:'Giáo viên',parent:'Phụ huynh',admin:'Quản trị'})[auth.user.role];
   document.body.dataset.role=auth.user.role;
+  $('.header-profile img').src=auth.user.role==='teacher'?'/assets/teacher.svg':'/assets/student.svg';
+  $('#search-input').placeholder=auth.user.role==='teacher'?'Tìm kiếm học sinh, lớp học, bài tập...':'Tìm bài học, chủ đề, dạng lỗi...';
+  $('.notification-button').href=auth.user.role==='teacher'?'#learning/errors':'#notifications';
+  $('.notification-button').setAttribute('aria-label',auth.user.role==='teacher'?'Xem lỗi cần chú ý':'Xem thông báo');
+
   document.body.classList.remove('auth-screen');
-  const html=page==='learning'?learningPageHTML():page==='practice'?practice(id):page==='learn'?learn(id,mode):page==='notebook'?notebook():page==='map'?knowledge():page==='progress'?progress():page==='explore'?exploreHTML(id):['lessons','challenges','formulas','profile','settings','notifications','search','parent','teacher'].includes(page)?extraPage(page,id):home();
-  $('#main').innerHTML=page==='teacher-library'?teacherLibraryHTML(auth.lessonPublications,id,auth.uploadedLessons):html;
-  if(['teacher','parent'].includes(auth.user.role)&&!auth.studentId&&['home','teacher','parent'].includes(page))$('#main').innerHTML=intro('KHÔNG GIAN CỦA BẠN','Chưa có học sinh được liên kết','Quản trị cần phân công học sinh cho tài khoản này.');
+  const html=page==='learning'?learningPageHTML():page==='practice'?practice(id):page==='learn'?learn(id,mode):page==='notebook'?notebook():page==='map'?knowledge():page==='progress'?progress():page==='explore'?exploreHTML(id):['lessons','challenges','formulas','profile','settings','notifications','search','parent','teacher','teacher-profile'].includes(page)?extraPage(page,id):home();
+  $('#main').innerHTML=page==='teacher-library'?teacherLibraryHTML(auth.lessonPublications,id,auth.uploadedLessons,allExercises):html;
+  if(!(page==='home'&&auth.user.role==='teacher')&&['teacher','parent'].includes(auth.user.role)&&!auth.studentId&&['home','teacher','parent'].includes(page))$('#main').innerHTML=intro('KHÔNG GIAN CỦA BẠN','Chưa có học sinh được liên kết','Quản trị cần phân công học sinh cho tài khoản này.');
   if(page==='home'&&auth.user.role==='student'&&state.assignments.length) { const box=document.createElement('div'); box.className='card';box.innerHTML='<h2>Nhiệm vụ từ giáo viên</h2>'+state.assignments.map(a=>`<div class="list-row"><div><h3>${esc(a.title)}</h3><p>${skillName(a.skill)} · Hạn ${esc(a.due)}</p></div><a class="btn secondary" href="${a.exerciseIds?.length?'#learning':'#practice/'+a.skill}">Làm bài →</a></div>`).join(''); $('#main').append(box); }
   if(page==='lessons'&&auth.user.role==='student')$('#main').insertAdjacentHTML('afterbegin',uploadedLessonsHTML(auth.uploadedLessons.filter(l=>l.grade===grade)));
   bind();
-  if(page==='learning'){const hub=$('#learning-hub');saveQueue.then(()=>{if(hub?.isConnected){if(saveFailed)hub.textContent='Chưa lưu được bài làm. Kiểm tra kết nối rồi thử lại.';else mountLearning($('#main'),{request:api,auth,studentId:id});}});}
+  if(page==='home'&&auth.user.role==='teacher'){let query='';try{query=decodeURIComponent(id||'');}catch{}mountTeacherDashboard($('#main'),{request:api,auth,query});}
+  if(page==='learning'){const hub=$('#learning-hub');saveQueue.then(()=>{if(hub?.isConnected){if(saveFailed)hub.textContent='Chưa lưu được bài làm. Kiểm tra kết nối rồi thử lại.';else mountLearning($('#main'),{request:api,auth,studentId:['classes','assignments','progress','errors'].includes(id)?undefined:id,view:['classes','assignments','progress','errors'].includes(id)?id:''});}});}
   attachMathPreviews($('#main'));
   if(page==='formulas') disposeAtlas=mountAtlas($('#main'),activeFormulas);
   if(page==='explore') disposeExplore=mountExplore($('#main'));
@@ -193,7 +204,7 @@ function bind() {
   document.querySelectorAll('.note-form').forEach(f=>f.addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/teacher/notes','POST',{studentId:auth.studentId,attemptId:f.dataset.id,text:$('textarea',f).value.trim()});state=await workspace(auth.studentId);toast('Đã lưu nhận xét cho học sinh.');}catch(error){toast(error.message);}}));
 }
 
-$('#global-search').addEventListener('submit',e=>{e.preventDefault();const q=$('#search-input').value.trim();if(q)location.hash='#search/'+encodeURIComponent(q);});
+$('#global-search').addEventListener('submit',e=>{e.preventDefault();const q=$('#search-input').value.trim();if(q)location.hash=(auth.user?.role==='teacher'?'#home/':'#search/')+encodeURIComponent(q);});
 async function refreshReadView(){
   const hash=location.hash,page=(hash.slice(1)||'home').split('/')[0],ticket=++readTicket,accountId=auth.user?.id;
   if(!authReady||!navigator.onLine||!['home','lessons','practice','formulas','progress','notebook','parent','teacher','teacher-library','notifications'].includes(page))return;

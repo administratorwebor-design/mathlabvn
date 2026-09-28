@@ -10,6 +10,12 @@ Menu **Hồ sơ lỗi & khắc phục** có tần suất loại lỗi, bằng ch
 
 ## Giáo viên
 
+Trang **Tổng quan** có sidebar xanh đậm, bốn chỉ số, biểu đồ theo ngày/chủ đề/loại lỗi, nhiệm vụ đang chờ hoàn thành, bảng học sinh và nhật ký hoạt động. Bộ chọn lớp dùng các lớp thật do giáo viên tạo. Biểu đồ so sánh chỉ dùng học sinh cùng khối được phân công cho chính giáo viên; không đại diện toàn trường. Khoảng 7/30 ngày áp dụng cho biểu đồ và số bộ bài mới giao. Các thống kê còn lại tổng hợp dữ liệu hiện có.
+
+Thanh tìm kiếm hỗ trợ học sinh, lớp và bài luyện; bộ lọc trong bảng học sinh tìm theo tên hoặc tình trạng có lỗi. Học sinh có lượt sai chưa được phân tích vẫn hiện “Chưa đủ bằng chứng”. Chỉ số chú ý tính số học sinh có lịch sử đáp án sai, không kết luận mức độ yếu. Điểm trung bình là trung bình điểm các bộ câu hỏi đã giao, gồm cả bộ đang làm được ghi rõ trong báo cáo chi tiết. Không có nhiệm vụ thì tiến độ/điểm hiển thị “—”. Dữ liệu giả chỉ dùng trong kiểm thử, không thêm vào tài khoản thật.
+
+Menu **Lớp học của tôi**, **Giao bài & chấm bài**, **Theo dõi tiến bộ** và **Phân tích lỗi sai** mở đúng phần quản lý tương ứng. **Tài liệu học tập** mở tải PDF/Word; **Thư viện bài giảng** mở bài học có sẵn. Giao diện tự chuyển sang một cột và thanh điều hướng cuộn ngang trên điện thoại.
+
 Menu **Bản đồ lỗi lớp**:
 
 - Tạo nhóm lớp từ học sinh được quản trị phân công, cùng khối trong hồ sơ.
@@ -37,5 +43,6 @@ Phụ huynh chỉ xem hồ sơ của con được liên kết; không phân lo�
 - `npm test`: quyền truy cập, điểm máy chủ, dữ liệu trước/sau, nhãn lỗi, bằng chứng AI, lưu và khởi động lại.
 - `node scripts/check-learning.mjs`: trình duyệt kiểm tra toàn luồng tạo lớp, giao câu, làm bài, AI, xác nhận, giao bài khắc phục, báo cáo và màn hình điện thoại; phản hồi Gemini được giả lập để chạy không tốn API.
 - `node scripts/check-content.mjs` và `node scripts/check-routing-stats.mjs`: tương thích chức năng soạn bài, tiến độ và điều hướng hiện có.
+- `node scripts/check-teacher-dashboard.mjs`: kiểm tra số liệu, chọn lớp, biểu đồ, tìm kiếm, lọc học sinh, các mục menu và bố cục desktop/điện thoại.
 
 Không có dữ liệu kiểm thử được ghi vào tài khoản thật hoặc snapshot deploy.

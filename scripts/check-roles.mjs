@@ -30,7 +30,7 @@ try{
   await page.goto(base+'/#learn/distribute-1');await page.locator('#answer').fill('3x+2');await page.locator('#answer-form button').click();
   await page.locator('[data-diagnosis="1"]').click();await page.locator('[data-next]').click();await page.locator('#correction').fill('3x+6');await page.locator('#correction-form button').click();
   await page.locator('#explanation').fill('Nhân 3 với từng số hạng trong ngoặc, rồi thế x bằng 1 để kiểm chứng.');await page.locator('[data-skip-ai]').click();
-  await logout();await login('teacher');await page.locator('#assignment-form').waitFor();
+  await logout();await login('teacher');await page.goto(base+'/#teacher');await page.locator('#assignment-form').waitFor();
   await page.locator('#assignment-title').fill('Ôn lại phép phân phối');await page.locator('#assignment-skill').selectOption('distribute');await page.locator('#assignment-due').fill('2026-10-01');await page.locator('#assignment-form button').click();
   await page.getByRole('heading',{name:'Ôn lại phép phân phối',exact:true}).waitFor();
   await page.locator('.note-form textarea').fill('Đúng quy tắc, có bước kiểm chứng.');await page.locator('.note-form button').click();

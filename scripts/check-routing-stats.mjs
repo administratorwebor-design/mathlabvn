@@ -32,7 +32,7 @@ try{
  // An update is announced without dropping typed input.
  await page.goto(app.base+'/#profile');await page.locator('#profile-name').fill('Bản nháp chưa lưu');
  await page.route('**/api/version',r=>r.fulfill({json:{version:'test-next-build'}}));await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.locator('#app-update-banner').waitFor();assert.equal(await page.locator('#profile-name').inputValue(),'Bản nháp chưa lưu');
- await page.unroute('**/api/version');await page.locator('#logout').click();await page.locator('#login-form').waitFor();await app.login(page,'teacher');await page.reload();await page.locator('#assignment-form').waitFor();
+ await page.unroute('**/api/version');await page.locator('#logout').click();await page.locator('#login-form').waitFor();await app.login(page,'teacher');await page.reload();await page.goto(app.base+'/#teacher');await page.locator('#assignment-form').waitFor();
  await page.locator('#assignment-title').fill('Nhiệm vụ căn bậc hai');await page.locator('#assignment-skill').selectOption('roots9');await page.locator('#assignment-due').fill('2026-10-01');await page.locator('#assignment-form button').click();
  await page.locator('a[href="#teacher-library/roots9"]').click();await page.getByRole('heading',{name:'Bài học của nhiệm vụ',exact:true}).waitFor();await page.getByRole('heading',{name:'Căn bậc hai và điều kiện',exact:true}).waitFor();assert.equal(await page.locator('.formula-atlas').count(),0);
  assert.deepEqual(errors,[]);console.log('PASS: stats agree, completion vs accuracy, all navigation, new progress refresh, unknown historic exercise, safe update notice and teacher assignment target');

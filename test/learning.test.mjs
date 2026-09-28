@@ -14,6 +14,7 @@ test('class ownership, assigned sets, server grades, immutable evidence and teac
  const filename=path.join(dir,'db.json'),store=createStore(filename),password='Learning-test-123!';
  const student=store.createUser({username:'student',name:'Student',role:'student',password}),other=store.createUser({username:'other',name:'Other',role:'student',password}),teacher=store.createUser({username:'teacher',name:'Teacher',role:'teacher',password,studentIds:[student.id]}),parent=store.createUser({username:'parent',name:'Parent',role:'parent',password,studentIds:[student.id]});
  const l=store.learning;
+ assert.equal(l.dashboard(teacher).completion,null);assert.throws(()=>l.dashboard(student),e=>e.status===403);
  assert.throws(()=>l.classReport(student),e=>e.status===403);assert.throws(()=>l.report(teacher,other.id),e=>e.status===403);
  assert.throws(()=>l.createClass(teacher,{name:'7A',grade:7,studentIds:[other.id]}),e=>e.status===403);
  const group=l.createClass(teacher,{name:'7A',grade:7,studentIds:[student.id]});
@@ -33,6 +34,7 @@ test('class ownership, assigned sets, server grades, immutable evidence and teac
  const second=record('sign-2',exercises.find(e=>e.id==='sign-2').answer,Date.now()+10);store.saveStudent(student,{attempts:[edited,second],reviews:{}});
  const r=l.report(student);assert.equal(r.assignments[0].result.score,5);assert.equal(r.assignments[0].result.complete,true);assert.equal(r.comparisons[0].after.correct,true);
  assert.equal(l.classReport(teacher,group.id).errors.find(e=>e.type==='sign').students.length,1);
+ const dashboard=l.dashboard(teacher,{classId:group.id});assert.equal(dashboard.completion,100);assert.equal(dashboard.totalStudents,1);assert.equal(dashboard.attention,1);assert.equal(dashboard.assignedRecently,1);assert.equal(dashboard.trend.length,7);
  assert.equal(createStore(filename).learning.report(student).errors.find(e=>e.type==='sign').confirmed,1);
  const admin=store.createUser({username:'admin',name:'Admin',role:'admin',password});store.link(admin,{userId:teacher.id,studentIds:[]});const fresh=store.authenticate(store.login('teacher',password,'teacher').token);assert.equal(l.classReport(fresh,group.id).total,0);assert.throws(()=>l.report(fresh,student.id),e=>e.status===403);
  }finally{rmSync(dir,{recursive:true,force:true});}
