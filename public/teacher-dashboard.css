@@ -1,5 +1,8 @@
 body[data-role="teacher"]{--td-navy:#0b2051;--td-blue:#0764ff;background:#f0f6ff;color:#102c68}
 body[data-role="teacher"] main{font-size:16px;line-height:1.65}
+body[data-role="teacher"] .mail-body{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;background:#f4f8ff;border:1px solid #dce7fb;padding:18px;border-radius:10px}
+body[data-role="teacher"] #parent-mail details{padding:12px 0;border-bottom:1px solid #dce7fb}
+body[data-role="teacher"] #parent-mail summary{cursor:pointer;overflow-wrap:anywhere}
 body[data-role="teacher"] .nav-item{min-height:44px;height:auto}
 body[data-role="teacher"] .td-event p:has(.math-expression){display:block;overflow:visible;-webkit-line-clamp:unset}
 body[data-role="teacher"] .td-task-name{min-width:180px}

@@ -1,5 +1,6 @@
 import {parentNavigation,parentSidebarHTML,parentDashboardHTML,mountParentDashboard} from './parent-dashboard.js';
 import {teacherNavigation,teacherDashboardHTML,mountTeacherDashboard} from './teacher-dashboard.js';
+import {parentMailHTML,mountParentMail} from './parent-mail.js';
 import {learningPageHTML,mountLearning,workingHTML,diagnosisActionHTML,diagnosisHTML} from './learning-view.js';
 import {bindContentEditor,customFormulasHTML} from './content-editor.js';
 import {bindLessonUpload,uploadedLessonsHTML} from './lesson-upload.js';
@@ -179,11 +180,12 @@ function renderPage() {
 
   document.body.classList.remove('auth-screen');
   const html=page==='learning'?learningPageHTML():page==='practice'?practice(id):page==='learn'?learn(id,mode):page==='notebook'?notebook():page==='map'?knowledge():page==='progress'?progress():page==='explore'?exploreHTML(id):['lessons','challenges','formulas','profile','settings','notifications','search','parent','teacher','teacher-profile'].includes(page)?extraPage(page,id):home();
-  $('#main').innerHTML=page==='teacher-library'?teacherLibraryHTML(auth.lessonPublications,id,auth.uploadedLessons,allExercises):html;
+  $('#main').innerHTML=page==='teacher-notifications'?parentMailHTML():page==='teacher-library'?teacherLibraryHTML(auth.lessonPublications,id,auth.uploadedLessons,allExercises):html;
   if(auth.user.role==='teacher'&&!auth.studentId&&page==='teacher')$('#main').innerHTML=intro('KHÔNG GIAN CỦA BẠN','Chưa có học sinh được liên kết','Quản trị cần phân công học sinh cho tài khoản này.');
   if(page==='home'&&auth.user.role==='student'&&state.assignments.length) { const box=document.createElement('div'); box.className='card';box.innerHTML='<h2>Nhiệm vụ từ giáo viên</h2>'+state.assignments.map(a=>`<div class="list-row"><div><h3>${esc(a.title)}</h3><p>${skillName(a.skill)} · Hạn ${esc(a.due)}</p></div><a class="btn secondary" href="${a.exerciseIds?.length?'#learning':'#practice/'+a.skill}">Làm bài →</a></div>`).join(''); $('#main').append(box); }
   if(page==='lessons'&&auth.user.role==='student')$('#main').insertAdjacentHTML('afterbegin',uploadedLessonsHTML(auth.uploadedLessons.filter(l=>l.grade===grade)));
   bind();
+  if(page==='teacher-notifications')mountParentMail($('#main'),{request:api});
   if(auth.user.role==='parent'&&['home','parent'].includes(page)){let query='';if(page==='home')try{query=decodeURIComponent(id||'');}catch{}mountParentDashboard($('#main'),{request:api,auth,view:page==='parent'?id||'progress':'',query,onChild:async id=>{state=await workspace(id);}});}
   if(page==='home'&&auth.user.role==='teacher'){let query='';try{query=decodeURIComponent(id||'');}catch{}mountTeacherDashboard($('#main'),{request:api,auth,query});}
   if(page==='learning'){const hub=$('#learning-hub');saveQueue.then(()=>{if(hub?.isConnected){if(saveFailed)hub.textContent='Chưa lưu được bài làm. Kiểm tra kết nối rồi thử lại.';else mountLearning($('#main'),{request:api,auth,studentId:['classes','assignments','progress','errors'].includes(id)?undefined:id,view:['classes','assignments','progress','errors'].includes(id)?id:''});}});}

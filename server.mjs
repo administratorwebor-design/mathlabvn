@@ -1,4 +1,5 @@
 import {learningAI} from './learning-ai.mjs';
+import {createGmailMailer} from './gmail-mailer.mjs';
 import {generateContentDraft} from './teacher-content.mjs';
 import http from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
@@ -18,6 +19,7 @@ try {
 } catch (e) { if (e.code !== 'ENOENT') throw e; }
 const key = process.env.GEMINI_API_KEY;
 export const accounts = createStore();
+const parentMail=accounts.learning.enableParentMail(createGmailMailer());
 const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const mathInstruction = String.raw`Định dạng bắt buộc: mọi biểu thức toán dùng LaTeX, bao bởi \( ... \) khi nằm trong câu hoặc \[ ... \] khi riêng dòng. Dùng \frac{a}{b} cho phân số, x^{2} cho số mũ, \sqrt{x} cho căn và \begin{cases}...\end{cases} cho hệ phương trình. Không dùng HTML, không đặt công thức trong code fence. Phần văn bản còn lại viết bình thường. `;
 const limits = new Map();
@@ -25,7 +27,7 @@ const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 const json = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 async function body(req) {
   let text = '';
-  for await (const chunk of req) { text += chunk; if (Buffer.byteLength(text) > (req.url==='/api/roster/preview'?7100000:req.url==='/api/teacher/lessons/upload'?14100000:req.url==='/api/student/state'?5000000:12000)) throw Object.assign(new Error('Yêu cầu vượt quá dung lượng cho phép.'),{status:413}); }
+  for await (const chunk of req) { text += chunk; if (Buffer.byteLength(text) > (req.url==='/api/parent-mail/preview'?30000:req.url==='/api/roster/preview'?7100000:req.url==='/api/teacher/lessons/upload'?14100000:req.url==='/api/student/state'?5000000:12000)) throw Object.assign(new Error('Yêu cầu vượt quá dung lượng cho phép.'),{status:413}); }
   return JSON.parse(text);
 }
 export function fallback(ex, explanation) {
@@ -63,6 +65,14 @@ export const server = http.createServer(async (req, res) => {
     if(url.pathname.startsWith('/api/')&&url.pathname!=='/api/status'&&!user)return json(res,401,{error:'Vui lòng đăng nhập để tiếp tục.'});
     if(url.pathname==='/api/auth/session'&&req.method==='GET')return json(res,200,{user:{id:user.id,name:user.name,username:user.username,role:user.role}});
     if(url.pathname==='/api/workspace'&&req.method==='GET')return json(res,200,{...accounts.workspace(user,url.searchParams.get('studentId')),lessonPublications:accounts.lessonPublications(),uploadedLessons:accounts.uploadedLessons(user),teacherContents:accounts.teacherContents(user)});
+    if(url.pathname.startsWith('/api/parent-mail/')){
+      if(user.role!=='teacher')return json(res,403,{error:'Chỉ giáo viên được gửi thông báo phụ huynh.'});
+      if(url.pathname==='/api/parent-mail/options'&&req.method==='GET')return json(res,200,parentMail.options(user));
+      if(url.pathname==='/api/parent-mail/history'&&req.method==='GET')return json(res,200,parentMail.history(user));
+      if(url.pathname==='/api/parent-mail/preview'&&req.method==='POST')return json(res,200,parentMail.preview(user,await body(req)));
+      if(url.pathname==='/api/parent-mail/send'&&req.method==='POST')return json(res,202,parentMail.send(user,(await body(req)).id));
+      return json(res,404,{error:'Không tìm thấy chức năng.'});
+    }
     if(url.pathname.startsWith('/api/roster/')){
       if(user.role!=='teacher')return json(res,403,{error:'Chỉ giáo viên được nhập danh sách.'});
       if(url.pathname==='/api/roster/template'&&req.method==='GET'){

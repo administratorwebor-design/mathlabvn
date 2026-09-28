@@ -1,4 +1,5 @@
 import {createLearningService} from './learning-service.mjs';
+import {createParentMailService} from './parent-mail.mjs';
 import {createRosterService} from './roster-import.mjs';
 import {validateContent,asExercise} from './teacher-content.mjs';
 import {readFileSync,writeFileSync,renameSync,mkdirSync,existsSync} from 'node:fs';
@@ -124,6 +125,7 @@ export function createStore(filename=process.env.MATH_DB_PATH||path.resolve('pri
   }
   function uploadedFile(user,id){const lesson=db.uploadedLessons.find(l=>l.id===id);if(!lesson||!canReadUpload(user,lesson))fail(404,'Không tìm thấy tài liệu hoặc bạn không có quyền truy cập.');return{lesson:publicLesson(lesson),content:readFileSync(path.join(uploadDir,lesson.fileKey))};}
   const learning=createLearningService({db,persist,student});
+  learning.enableParentMail=mailer=>createParentMailService({db,persist,learning,mailer});
   learning.roster=createRosterService({db,persist});
   return{learning,teacherContents,publishContent,contentExercises,createUser,login,authenticate,workspace,saveStudent,assign,note,link,importLessons,uploadLesson,uploadedLessons,uploadedFile,lessonPublications:()=>db.lessonPublications.map(({id,publishedAt})=>({id,publishedAt})),logout:token=>sessions.delete(token),users:()=>db.users.map(publicUser)};
 }

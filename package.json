@@ -18,6 +18,7 @@
   "dependencies": {
     "exceljs": "^4.4.0",
     "katex": "^0.18.9",
+    "nodemailer": "^10.0.12",
     "three": "^0.186.1"
   },
   "overrides": {

@@ -1,6 +1,6 @@
 export const auth={user:null,students:[],studentId:null,users:[],lessonPublications:[],uploadedLessons:[],teacherContents:[]};
 export const roleNames={student:'Học sinh',teacher:'Giáo viên',parent:'Phụ huynh',admin:'Quản trị'};
-export const allowed={student:['learning','home','lessons','practice','learn','explore','challenges','progress','notebook','map','formulas','profile','settings','notifications','search'],teacher:['teacher-profile','learning','home','teacher','teacher-library','formulas','explore','settings'],parent:['learning','home','parent','settings'],admin:['home','admin','settings']};
+export const allowed={student:['learning','home','lessons','practice','learn','explore','challenges','progress','notebook','map','formulas','profile','settings','notifications','search'],teacher:['teacher-notifications','teacher-profile','learning','home','teacher','teacher-library','formulas','explore','settings'],parent:['learning','home','parent','settings'],admin:['home','admin','settings']};
 export const canVisit=page=>!!auth.user&&allowed[auth.user.role]?.includes(page);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function api(url,method='GET',data,timeout=15000){
